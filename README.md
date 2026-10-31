@@ -8,8 +8,11 @@ Rails, database or Redis dependency.
 ## Installation
 
 ```ruby
-gem 'core-mcp', '~> 0.1.0', require: 'core_mcp'
+gem 'core-mcp', github: 'guestitab/core-mcp', branch: 'production', require: 'core_mcp'
 ```
+
+The lockfile pins the production commit. Development happens on `staging`;
+`production` carries released versions. GitHub releases include the built `.gem`.
 
 ## Hosting
 
