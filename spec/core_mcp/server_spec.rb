@@ -5,6 +5,7 @@ RSpec.describe CoreMcp::Server do
 
   let(:server) { described_class.new(configuration:) }
   let(:host) { 'localhost' }
+  let(:http_method) { 'POST' }
   let(:headers) do
     {
       'CONTENT_TYPE' => 'application/json',
@@ -17,10 +18,24 @@ RSpec.describe CoreMcp::Server do
   let(:result) { JSON.parse(response.body) }
 
   def send_message
-    env = Rack::MockRequest.env_for("http://#{host}/mcp", method: 'POST', input: body, **headers, 'HTTP_HOST' => host)
+    env = Rack::MockRequest.env_for("http://#{host}/mcp", method: http_method, input: body, **headers, 'HTTP_HOST' => host)
     status, response_headers, response_body = server.call(request: Rack::Request.new(env), server_context:)
 
     Rack::MockResponse.new(status, response_headers, response_body)
+  end
+
+  describe '.rate_limited_response' do
+    it 'encodes a retryable JSON-RPC error with the host interval' do
+      status, headers, body = described_class.rate_limited_response(retry_after: 75)
+
+      expect(status).to eq(429)
+      expect(headers).to include('content-type' => 'application/json', 'retry-after' => '75')
+      expect(JSON.parse(body.join)).to eq(
+        'jsonrpc' => '2.0',
+        'id' => nil,
+        'error' => { 'code' => -32_000, 'message' => 'Too many requests. Retry after 75 seconds.' }
+      )
+    end
   end
 
   describe '#call' do
@@ -150,6 +165,55 @@ RSpec.describe CoreMcp::Server do
 
       it 'refuses the host' do
         expect(response.status).to eq(403)
+      end
+    end
+
+    context 'with an unsupported protocol version' do
+      let(:headers) { super().merge('HTTP_MCP_PROTOCOL_VERSION' => '2099-01-01') }
+
+      it 'refuses the protocol version' do
+        expect(response.status).to eq(400)
+      end
+    end
+
+    context 'with a non-JSON content type' do
+      let(:headers) { super().merge('CONTENT_TYPE' => 'text/plain') }
+
+      it 'requires JSON' do
+        expect(response.status).to eq(415)
+      end
+    end
+
+    context 'without an acceptable response type' do
+      let(:headers) { super().merge('HTTP_ACCEPT' => 'text/html') }
+
+      it 'requires a JSON-capable client' do
+        expect(response.status).to eq(406)
+      end
+    end
+
+    context 'with GET' do
+      let(:http_method) { 'GET' }
+
+      it 'does not open a notification stream' do
+        expect(response.status).to eq(405)
+      end
+    end
+
+    context 'with DELETE' do
+      let(:http_method) { 'DELETE' }
+
+      it 'acknowledges the stateless disconnect' do
+        expect(response.status).to eq(200)
+        expect(result).to eq('success' => true)
+      end
+
+      context 'with the modern stateless protocol' do
+        let(:headers) { super().merge('HTTP_MCP_PROTOCOL_VERSION' => '2026-07-28') }
+
+        it 'refuses session termination' do
+          expect(response.status).to eq(405)
+        end
       end
     end
 

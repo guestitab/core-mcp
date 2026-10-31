@@ -1,5 +1,7 @@
 RSpec.describe CoreMcp::Catalog::Stay do
-  subject(:details) { described_class.new(data:, inputs:).details }
+  subject(:details) { described_class.new(data:, inputs:, web_origin:).details }
+
+  let(:web_origin) { 'https://localhost' }
 
   let(:inputs) do
     CoreMcp::Inputs.new(
@@ -10,7 +12,6 @@ RSpec.describe CoreMcp::Catalog::Stay do
   let(:data) do
     {
       'slug' => 'stockholm-stay',
-      'websiteUrl' => 'https://localhost/listings/stockholm-stay',
       'name' => 'Stockholm stay',
       'summary' => '<div>First room.</div><div>Second&nbsp;room.</div>',
       'numReviews' => 2,
@@ -46,6 +47,14 @@ RSpec.describe CoreMcp::Catalog::Stay do
           payment_schedule: [include(amount_minor: 37_500)]
         )
       )
+    end
+
+    context 'with a different booking origin' do
+      let(:web_origin) { 'https://booking.example.test:3443' }
+
+      it 'builds the handoff from the configured origin and canonical slug' do
+        expect(details.fetch(:website_url)).to eq('https://booking.example.test:3443/en/listings/stockholm-stay?adults=2&endDate=2027-02-15&startDate=2027-02-12')
+      end
     end
 
     context 'without dates' do

@@ -1,5 +1,4 @@
 class CoreMcp::Quota
-  PLATFORM_HEADER = 'X-Amzn-Waf-Ai-Platform'.freeze #: ::String
   OPENAI = 'openai'.freeze #: ::String
   SUBJECT = :'openai/subject' #: ::Symbol
   PER_CALLER = 30 #: ::Integer

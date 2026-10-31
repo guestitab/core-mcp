@@ -118,6 +118,7 @@ module CoreMcp
     PROVIDER_RATE_LIMITED: ::String
     INVALID_INPUT: ::String
     @schema: _Schema
+    @web_origin: ::String
     @context: ::Hash[::Symbol, untyped]
     def initialize: (server_context: server_context) -> void
     def resolve_destination: (Inputs inputs) -> payload
@@ -157,7 +158,8 @@ module CoreMcp
       WEBSITE_DEFAULT_LOCALE: ::String
       @data: ::Hash[::String, untyped]
       @inputs: Inputs
-      def initialize: (data: ::Hash[::String, untyped], inputs: Inputs) -> void
+      @web_origin: ::String
+      def initialize: (data: ::Hash[::String, untyped], inputs: Inputs, web_origin: ::String) -> void
       def card: () -> listing
       def details: () -> listing
       def unavailable?: () -> bool
@@ -176,7 +178,6 @@ module CoreMcp
   end
 
   class Quota
-    PLATFORM_HEADER: ::String
     OPENAI: ::String
     SUBJECT: ::Symbol
     PER_CALLER: ::Integer
@@ -197,6 +198,7 @@ module CoreMcp
     TOOLS: ::Array[singleton(::MCP::Tool)]
     ICON: ::Hash[::Symbol, untyped]
     @configuration: Config
+    def self.rate_limited_response: (retry_after: ::Integer) -> rack_response
     def initialize: (configuration: Config) -> void
     def call: (request: ::MCP::_HttpRequest, server_context: request_context) -> rack_response
 

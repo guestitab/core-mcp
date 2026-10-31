@@ -11,6 +11,25 @@ class CoreMcp::Server
     sizes: %w[180x180]
   }.freeze #: ::Hash[::Symbol, untyped]
 
+  # @rbs (retry_after: ::Integer) -> CoreMcp::rack_response
+  def self.rate_limited_response(retry_after:)
+    payload = {
+      jsonrpc: '2.0',
+      id: nil,
+      error: {
+        code: -32_000,
+        message: "Too many requests. Retry after #{retry_after} seconds."
+      }
+    }
+    headers = {
+      'content-type' => 'application/json',
+      'retry-after' => retry_after.to_s
+    }
+    body = [::JSON.generate(payload)]
+
+    [429, headers, body]
+  end
+
   # @rbs (configuration: CoreMcp::Config) -> void
   def initialize(configuration:)
     @configuration = configuration

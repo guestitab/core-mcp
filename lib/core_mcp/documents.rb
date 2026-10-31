@@ -9,7 +9,7 @@ module CoreMcp::Documents
 
   CARD = <<~GRAPHQL.freeze #: ::String
     fragment McpStayCard on Listing {
-      slug websiteUrl name(locale: $locale) summary(locale: $locale)
+      slug name(locale: $locale) summary(locale: $locale)
       ratingScore numReviews
       occupancy { numGuests numBedrooms numBeds petsAllowed }
       featuredAmenities { name(locale: $locale) }

@@ -1,10 +1,11 @@
 class CoreMcp::Catalog::Stay
   WEBSITE_DEFAULT_LOCALE = 'sv'.freeze #: ::String
 
-  # @rbs (data: ::Hash[::String, untyped], inputs: CoreMcp::Inputs) -> void
-  def initialize(data:, inputs:)
+  # @rbs (data: ::Hash[::String, untyped], inputs: CoreMcp::Inputs, web_origin: ::String) -> void
+  def initialize(data:, inputs:, web_origin:)
     @data = data
     @inputs = inputs
+    @web_origin = web_origin
   end
 
   # @rbs () -> CoreMcp::listing
@@ -64,7 +65,8 @@ class CoreMcp::Catalog::Stay
 
   # @rbs () -> ::String
   def website_url
-    url = ::URI.parse(@data.fetch('websiteUrl'))
+    url = ::URI.parse(@web_origin)
+    url.path = "/listings/#{@data.fetch('slug')}"
     url.path = "/#{@inputs.locale}#{url.path}" unless @inputs.locale == WEBSITE_DEFAULT_LOCALE
     url.query = ::URI.encode_www_form(booking_params.sort_by { |key, _value| key.to_s })
 
