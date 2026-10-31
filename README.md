@@ -86,9 +86,12 @@ bundle exec rake
 bundle exec rbs collection install
 bundle exec steep check --no-daemon -j 2
 gem build core-mcp.gemspec
+bundle exec ruby script/check_package.rb core-mcp-<version>.gem
 ```
 
 Browser specs run in WebKit against a local MCP Apps host fixture. The
-catalog and quota are test doubles; no live provider calls are made.
+catalog and quota are test doubles; no live provider calls are made. The package
+check unpacks the built gem and loads it in a bundle containing only its runtime
+dependencies.
 
 Released under the [MIT License](LICENSE).

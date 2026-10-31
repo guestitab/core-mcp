@@ -33,6 +33,10 @@ gems:
     revision: 9e17daa08b1710667699a208981cffd21dbf15f6
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
+- name: date
+  version: '0'
+  source:
+    type: stdlib
 - name: delegate
   version: '0'
   source:
@@ -45,6 +49,10 @@ gems:
     revision: 9e17daa08b1710667699a208981cffd21dbf15f6
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
+- name: erb
+  version: '0'
+  source:
+    type: stdlib
 - name: fileutils
   version: '0'
   source:
@@ -61,6 +69,10 @@ gems:
     revision: 9e17daa08b1710667699a208981cffd21dbf15f6
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
+- name: json
+  version: '0'
+  source:
+    type: stdlib
 - name: logger
   version: '1.7'
   source:

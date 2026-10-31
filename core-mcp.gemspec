@@ -16,7 +16,11 @@ Gem::Specification.new do |spec|
   spec.files = %w[LICENSE README.md] + Dir['lib/**/*.rb', 'sig/**/*.rbs', 'sig/**/*.yaml', 'assets/**/*', 'locales/*.yml'].select { |path| File.file?(path) }
   spec.require_paths = ['lib']
 
+  spec.add_dependency 'base64', '~> 0.3'
+  spec.add_dependency 'date', '~> 3.6'
+  spec.add_dependency 'erb', '~> 6.0'
   spec.add_dependency 'i18n', '~> 1.15'
+  spec.add_dependency 'json', '~> 3.1'
   spec.add_dependency 'mcp', '~> 1.7.0'
   spec.add_dependency 'rack', '~> 3.2'
 end
