@@ -4,8 +4,8 @@ RSpec.describe CoreMcp::Widget do
   describe '.contents' do
     let(:configuration) do
       CoreMcp::Config.new(
-        catalog: catalog_factory,
-        quota: quota_factory,
+        schema:,
+        cache:,
         web_origin:,
         image_origins: ['https://localhost', 'https://images.example.net']
       )

@@ -1,5 +1,15 @@
 en:
   core_mcp:
+    catalog:
+      arguments:
+        destination_unknown: Choose a destination returned by resolve_destination.
+        duplicate_stays: Choose different stays to compare.
+        invalid_input: Guestit could not use these search details.
+      busy: Guestit is busy right now. Try again in a minute.
+      failed: Guestit could not complete this request. Try again later.
+    quota:
+      caller: Too many requests from this conversation. Try again in a minute.
+      total: Guestit is busy right now. Try again in a minute.
     stays:
       title: Guestit stays
       loading: Loading stays…

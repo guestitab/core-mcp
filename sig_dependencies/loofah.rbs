@@ -1,0 +1,7 @@
+module Loofah
+  def self.html5_fragment: (::String html) -> ::Loofah::_Fragment
+
+  interface _Fragment
+    def to_text: () -> ::String
+  end
+end

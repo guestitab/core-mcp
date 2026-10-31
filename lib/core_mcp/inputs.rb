@@ -32,7 +32,67 @@ class CoreMcp::Inputs
     }
   end
 
+  # @rbs () -> ::Hash[::Symbol, untyped]
+  def listing_variables
+    {
+      locale:,
+      startDate: @arguments[:start_date],
+      endDate: @arguments[:end_date],
+      numGuests: @arguments.fetch(:num_guests),
+      includePrice: dated?
+    }
+  end
+
+  # @rbs () -> ::Hash[::Symbol, untyped]
+  def search_variables
+    listing_variables.merge(
+      filters:,
+      page: @arguments.fetch(:page, 1),
+      limit: @arguments.fetch(:limit, 5),
+      sortBy: @arguments.fetch(:sort, 'relevance').upcase
+    )
+  end
+
   private
+
+  # @rbs () -> ::Hash[::Symbol, untyped]
+  def filters
+    {
+      locationId: @arguments.fetch(:location_id),
+      occupancy:,
+      availability:,
+      price: budget
+    }.compact
+  end
+
+  # @rbs () -> ::Hash[::Symbol, untyped]
+  def occupancy
+    {
+      numGuests: @arguments.fetch(:num_guests),
+      withPets: @arguments.fetch(:with_pets, false),
+      numBedrooms: @arguments[:min_bedrooms]
+    }.compact
+  end
+
+  # @rbs () -> ::Hash[::Symbol, untyped]
+  def availability
+    return {} unless dated?
+
+    {
+      startDate: @arguments.fetch(:start_date),
+      endDate: @arguments.fetch(:end_date)
+    }
+  end
+
+  # @rbs () -> ::Hash[::Symbol, untyped]?
+  def budget
+    return unless @arguments[:nightly_rate_min] || @arguments[:nightly_rate_max]
+
+    {
+      min: @arguments.fetch(:nightly_rate_min, 0),
+      max: @arguments[:nightly_rate_max]
+    }.compact
+  end
 
   # @rbs () -> void
   def validate_dates!

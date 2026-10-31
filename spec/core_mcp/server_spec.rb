@@ -1,6 +1,8 @@
 RSpec.describe CoreMcp::Server do
   subject(:response) { send_message }
 
+  include_context 'with catalog tools'
+
   let(:server) { described_class.new(configuration:) }
   let(:host) { 'localhost' }
   let(:headers) do
@@ -92,7 +94,7 @@ RSpec.describe CoreMcp::Server do
 
         it 'refuses the request before reading the catalog' do
           expect(result).to have_key('error')
-          expect(catalog_factory).not_to have_received(:new)
+          expect(CoreMcp::Catalog).not_to have_received(:new)
         end
       end
     end
@@ -107,7 +109,7 @@ RSpec.describe CoreMcp::Server do
 
       it 'returns a tool refusal before reading the catalog' do
         expect(result.dig('result', 'isError')).to be(true)
-        expect(catalog_factory).not_to have_received(:new)
+        expect(CoreMcp::Catalog).not_to have_received(:new)
       end
     end
 
@@ -182,30 +184,15 @@ RSpec.describe CoreMcp::Server do
         expect(JSON.parse(result.dig('result', 'content', 0, 'text'))).to eq(result.dig('result', 'structuredContent'))
       end
 
-      it 'passes request metadata from the SDK to the host quota' do
-        allow(quota_factory).to receive(:new) do |server_context:|
+      it 'passes request metadata from the SDK to the quota' do
+        allow(CoreMcp::Quota).to receive(:new) do |server_context:|
           expect(server_context[:_meta]).to include('openai/subject': 'user-1')
           expect(server_context[:ip_address]).to eq('192.0.2.1')
           quota
         end
 
         expect(response.status).to eq(200)
-        expect(quota_factory).to have_received(:new)
-      end
-
-      context 'when another server has a different catalog' do
-        let(:other_catalog) { double('Other catalog', stay_details: payload.merge(view: 'compare')) }
-        let(:other_factory) { double('Other catalog factory', new: other_catalog) }
-        let(:other_configuration) do
-          CoreMcp::Config.new(catalog: other_factory, quota: quota_factory, web_origin: 'https://example.net', image_origins: [])
-        end
-
-        before { described_class.new(configuration: other_configuration) }
-
-        it 'keeps the original server catalog' do
-          expect(result.dig('result', 'structuredContent', 'view')).to eq('details')
-          expect(other_catalog).not_to have_received(:stay_details)
-        end
+        expect(CoreMcp::Quota).to have_received(:new)
       end
     end
   end

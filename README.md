@@ -2,8 +2,9 @@
 
 Guestit's public MCP server and MCP App for finding destinations, searching
 stays, reading details and comparing dated prices. Booking continues on the
-Guestit website. The host supplies the catalog and quotas; the gem has no
-Rails, database or Redis dependency.
+Guestit website. The gem owns catalog queries, result mapping, quotas and
+translations. The host supplies its public GraphQL schema and shared cache.
+The gem has no Rails, database or Redis dependency.
 
 ## Installation
 
@@ -16,13 +17,12 @@ The lockfile pins the production commit. Development happens on `staging`;
 
 ## Hosting
 
-Create a configuration with the catalog and quota classes implemented by the
-host. They are instantiated for each tool call with `server_context:`.
+Pass the Core GraphQL schema and a shared cache to the configuration.
 
 ```ruby
 configuration = CoreMcp::Config.new(
-  catalog: MyCatalog,
-  quota: MyQuota,
+  schema: CoreSchema,
+  cache: Rails.cache,
   web_origin: 'https://guestit.se',
   image_origins: ['https://images.example.com']
 )
@@ -42,19 +42,28 @@ status, headers, body = server.call(request:, server_context: context)
 `request` is a Rack-compatible request. Use the host's trusted-proxy IP and
 current date in its booking time zone. Keep reloaded application classes in a
 request-scoped configuration. The SDK adds tool-call `_meta` to the context
-before instantiating the catalog and quota.
+before the gem executes a tool and spends its quota.
 
-The catalog implements `resolve_destination(inputs)`, `search_stays(inputs)`,
-`stay_details(inputs)` and `compare_stays(inputs)`. `CoreMcp::Inputs` exposes
-`arguments`, `locale`, `dated?` and `stay`. Results are hashes matching the
-schemas in `CoreMcp::Tools::Schemas`, with amounts in minor units, plain text
-and complete website URLs. The host owns query execution, public visibility,
-price calculation, availability checks and destination validation.
+`CoreMcp::Catalog` executes fixed anonymous documents through `schema.execute`
+and `schema.multiplex`. It reads `storedLocation`, `availableListings` and
+`showListing`, maps their public data into the tool schemas, cleans HTML and
+builds booking links. The schema owns public visibility, availability and price
+calculation. Destination lookup uses `storedLocation(query:, id:)`, which reads
+local visible locations without a provider call. A query finds one location
+with homes; an id checks that the requested location is visible.
 
-The quota implements `spend!(locale)`. The host owns shared counters and the
-trust decision for `ai_platform`. In Guestit Core the label comes from an edge
-that blocks client-supplied platform headers. An unverified client header
-must not bypass the host's IP limit.
+`CoreMcp::Quota` uses `cache.increment(key, amount, expires_in:)`. Counters must
+be shared between host processes and expire after 60 seconds. The limits are
+30 calls per caller and 300 total. Trusted OpenAI user subjects have separate
+allowances; other AI platform calls without a subject count toward the total.
+Direct clients use their IP address. The host supplies the trust decision for
+`ai_platform`. In Guestit Core the label comes from an edge that blocks
+client-supplied platform headers. An unverified client header must not bypass
+the host's IP limit.
+
+All MCP translations ship under `core_mcp` in the gem. Input and catalog
+argument refusals are English only. Busy, failure and quota messages follow
+the requested English or Swedish locale.
 
 Raise `CoreMcp::Error` for an expected tool refusal or
 `CoreMcp::ArgumentError` for invalid inputs. Refusals become `isError` tool
@@ -90,7 +99,7 @@ bundle exec ruby script/check_package.rb core-mcp-<version>.gem
 ```
 
 Browser specs run in WebKit against a local MCP Apps host fixture. The
-catalog and quota are test doubles; no live provider calls are made. The package
+widget host and GraphQL responses are fixtures; no live provider calls are made. The package
 check unpacks the built gem and loads it in a bundle containing only its runtime
 dependencies.
 

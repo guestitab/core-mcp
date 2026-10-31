@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.version = CoreMcp::VERSION
   spec.authors = ['Guestit']
   spec.summary = 'Public stay discovery through MCP'
-  spec.description = 'Guestit MCP tools and an MCP App for searching and comparing stays, with a host-provided catalog.'
+  spec.description = 'Guestit MCP tools and an MCP App for searching and comparing stays, backed by the public Core GraphQL schema.'
   spec.license = 'MIT'
   spec.homepage = 'https://github.com/guestitab/core-mcp'
   spec.required_ruby_version = '>= 4.0'
@@ -21,6 +21,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'erb', '~> 6.0'
   spec.add_dependency 'i18n', '~> 1.15'
   spec.add_dependency 'json', '~> 3.1'
+  spec.add_dependency 'loofah', '~> 2.25'
   spec.add_dependency 'mcp', '~> 1.7.0'
+  spec.add_dependency 'nokogiri', '~> 1.19'
   spec.add_dependency 'rack', '~> 3.2'
+  spec.add_dependency 'uri', '~> 1.1'
 end

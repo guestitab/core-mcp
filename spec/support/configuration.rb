@@ -1,12 +1,10 @@
 RSpec.shared_context 'with MCP configuration' do
-  let(:catalog) { double('Catalog') }
-  let(:quota) { double('Quota', spend!: nil) }
-  let(:catalog_factory) { double('Catalog factory', new: catalog) }
-  let(:quota_factory) { double('Quota factory', new: quota) }
+  let(:schema) { double('GraphQL schema') }
+  let(:cache) { double('Cache') }
   let(:configuration) do
     CoreMcp::Config.new(
-      catalog: catalog_factory,
-      quota: quota_factory,
+      schema:,
+      cache:,
       web_origin: 'https://localhost',
       image_origins: ['https://localhost']
     )
@@ -19,5 +17,15 @@ RSpec.shared_context 'with MCP configuration' do
       today: Date.new(2027, 2, 1),
       configuration:
     }
+  end
+end
+
+RSpec.shared_context 'with catalog tools' do
+  let(:catalog) { instance_double(CoreMcp::Catalog) }
+  let(:quota) { instance_double(CoreMcp::Quota, spend!: nil) }
+
+  before do
+    allow(CoreMcp::Catalog).to receive(:new).and_return(catalog)
+    allow(CoreMcp::Quota).to receive(:new).and_return(quota)
   end
 end

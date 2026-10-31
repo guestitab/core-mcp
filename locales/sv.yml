@@ -1,5 +1,11 @@
 sv:
   core_mcp:
+    catalog:
+      busy: Guestit har mycket att göra just nu. Försök igen om en minut.
+      failed: Guestit kunde inte slutföra förfrågan. Försök igen senare.
+    quota:
+      caller: För många förfrågningar från den här konversationen. Försök igen om en minut.
+      total: Guestit har mycket att göra just nu. Försök igen om en minut.
     stays:
       title: Guestit-boenden
       loading: Laddar boenden…

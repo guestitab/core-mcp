@@ -50,23 +50,17 @@ end
 module CoreMcp
   VERSION: ::String
 
-  interface _Catalog
-    def resolve_destination: (Inputs inputs) -> payload
-    def search_stays: (Inputs inputs) -> payload
-    def stay_details: (Inputs inputs) -> payload
-    def compare_stays: (Inputs inputs) -> payload
+  interface _QueryResult
+    def to_h: () -> ::Hash[::String, untyped]
   end
 
-  interface _CatalogFactory
-    def new: (server_context: server_context) -> _Catalog
+  interface _Schema
+    def execute: (::String document, variables: ::Hash[::Symbol, untyped], context: ::Hash[::Symbol, untyped]) -> _QueryResult
+    def multiplex: (::Array[::Hash[::Symbol, untyped]] queries, max_complexity: nil) -> ::Array[_QueryResult]
   end
 
-  interface _Quota
-    def spend!: (::String locale) -> void
-  end
-
-  interface _QuotaFactory
-    def new: (server_context: server_context) -> _Quota
+  interface _Cache
+    def increment: (::String key, ::Integer amount, expires_in: ::Integer) -> ::Integer?
   end
 
   class Error < ::StandardError
@@ -80,13 +74,13 @@ module CoreMcp
   end
 
   class Config
-    attr_reader catalog: _CatalogFactory
-    attr_reader quota: _QuotaFactory
+    attr_reader schema: _Schema
+    attr_reader cache: _Cache
     attr_reader web_origin: ::String
     attr_reader image_origins: ::Array[::String]
     attr_accessor allowed_hosts: ::Array[::String]
     attr_accessor error_reporter: _ErrorReporter
-    def initialize: (catalog: _CatalogFactory, quota: _QuotaFactory, web_origin: ::String, image_origins: ::Array[::String]) -> void
+    def initialize: (schema: _Schema, cache: _Cache, web_origin: ::String, image_origins: ::Array[::String]) -> void
   end
 
   class Inputs
@@ -98,12 +92,105 @@ module CoreMcp
     def locale: () -> ::String
     def dated?: () -> bool
     def stay: () -> stay_input
+    def listing_variables: () -> ::Hash[::Symbol, untyped]
+    def search_variables: () -> ::Hash[::Symbol, untyped]
 
     private
 
+    def filters: () -> ::Hash[::Symbol, untyped]
+    def occupancy: () -> ::Hash[::Symbol, untyped]
+    def availability: () -> ::Hash[::Symbol, untyped]
+    def budget: () -> ::Hash[::Symbol, untyped]?
     def validate_dates!: () -> void
     def validate_period!: (::Date from, ::Date to) -> void
     def validate_budget!: () -> void
+  end
+
+  module Documents
+    DESTINATION: ::String
+    CARD: ::String
+    SEARCH: ::String
+    DETAILS: ::String
+  end
+
+  class Catalog
+    RECORD_NOT_FOUND: ::String
+    PROVIDER_RATE_LIMITED: ::String
+    INVALID_INPUT: ::String
+    @schema: _Schema
+    @context: ::Hash[::Symbol, untyped]
+    def initialize: (server_context: server_context) -> void
+    def resolve_destination: (Inputs inputs) -> payload
+    def search_stays: (Inputs inputs) -> payload
+    def stay_details: (Inputs inputs) -> payload
+    def compare_stays: (Inputs inputs) -> payload
+
+    private
+
+    def response: (::String view, Inputs inputs, ::Hash[::Symbol, untyped] attributes) -> payload
+    def validate_destination!: (Inputs inputs) -> void
+    def destination: (::Hash[::String, untyped] location) -> ::Hash[::Symbol, untyped]
+    def pagination: (::Hash[::String, untyped] metadata) -> ::Hash[::Symbol, untyped]
+    def execute: (::String document, ::Hash[::Symbol, untyped] variables) -> ::Hash[::String, untyped]
+    def public_stays: (::Array[::String] slugs, Inputs inputs) -> ::Array[listing]
+    def public_listing: (::Hash[::String, untyped] result, ::String locale) -> ::Hash[::String, untyped]?
+    def query_error_message: (::Array[::Hash[::String, untyped]] errors, ::String locale) -> ::String
+
+    class QueryError < Error
+    end
+
+    class Price
+      DEFAULT_CURRENCY: ::String
+      @data: ::Hash[::String, untyped]
+      def initialize: (::Hash[::String, untyped] data) -> void
+      def payload: () -> price
+      def self.empty: (::String status) -> price
+
+      private
+
+      def guest_fees: () -> ::Array[::Hash[::Symbol, untyped]]
+      def schedule: (::Array[::Hash[::String, untyped]] payments) -> ::Array[::Hash[::Symbol, untyped]]
+      def as_cents: ((::Integer | ::Float) value) -> ::Integer
+    end
+
+    class Stay
+      WEBSITE_DEFAULT_LOCALE: ::String
+      @data: ::Hash[::String, untyped]
+      @inputs: Inputs
+      def initialize: (data: ::Hash[::String, untyped], inputs: Inputs) -> void
+      def card: () -> listing
+      def details: () -> listing
+      def unavailable?: () -> bool
+      def self.missing: (::String slug) -> listing
+
+      private
+
+      def images: () -> ::Array[::Hash[::Symbol, untyped]]
+      def website_url: () -> ::String
+      def booking_params: () -> ::Hash[::Symbol, untyped]
+      def text: (::String key) -> ::String?
+      def occupancy: () -> ::Hash[::Symbol, untyped]
+      def price: () -> price
+
+    end
+  end
+
+  class Quota
+    PLATFORM_HEADER: ::String
+    OPENAI: ::String
+    SUBJECT: ::Symbol
+    PER_CALLER: ::Integer
+    TOTAL: ::Integer
+    WINDOW: ::Integer
+    @server_context: server_context
+    @cache: _Cache
+    def initialize: (server_context: server_context) -> void
+    def spend!: (::String locale) -> void
+
+    private
+
+    def caller_key: () -> ::String?
+    def over?: (::String key, ::Integer limit) -> bool
   end
 
   class Server
@@ -149,7 +236,7 @@ module CoreMcp
 
     class Base < ::MCP::Tool
       def self.inherited: (singleton(Base) subclass) -> void
-      def self.respond: (server_context: server_context, arguments: arguments) { (_Catalog, Inputs) -> payload } -> ::MCP::Tool::Response
+      def self.respond: (server_context: server_context, arguments: arguments) { (Catalog, Inputs) -> payload } -> ::MCP::Tool::Response
     end
 
     class ResolveDestination < Base

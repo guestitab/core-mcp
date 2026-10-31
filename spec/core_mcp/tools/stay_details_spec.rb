@@ -1,4 +1,5 @@
 RSpec.describe CoreMcp::Tools::StayDetails do
+  include_context 'with catalog tools'
   let(:arguments) { { listing_slug: 'public-listing', num_guests: 2, start_date: '2027-02-12', end_date: '2027-02-15' } }
 
   describe '.call' do
@@ -17,8 +18,8 @@ RSpec.describe CoreMcp::Tools::StayDetails do
           response = described_class.call(server_context:, **arguments)
 
           expect(response).to be_error
-          expect(catalog_factory).not_to have_received(:new)
-          expect(quota_factory).not_to have_received(:new)
+          expect(CoreMcp::Catalog).not_to have_received(:new)
+          expect(CoreMcp::Quota).not_to have_received(:new)
         end
       end
     end

@@ -5,7 +5,13 @@ require 'tmpdir'
 
 package = Gem::Package.new(ARGV.fetch(0))
 bundle_path = Bundler.settings[:path]
-check = "require 'core_mcp'\nabort 'Rails loaded' if defined?(Rails)\nputs 'Runtime-only package loads without Rails'"
+check = <<~RUBY
+  require 'core_mcp'
+  abort 'Rails loaded' if defined?(Rails)
+  I18n.t('core_mcp.catalog.busy', locale: :en, raise: true)
+  I18n.t('core_mcp.quota.caller', locale: :sv, raise: true)
+  puts 'Runtime-only package and translations load without Rails'
+RUBY
 
 Dir.mktmpdir('core-mcp-runtime') do |directory|
   package_root = File.join(directory, 'package')

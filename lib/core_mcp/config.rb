@@ -1,11 +1,11 @@
 class CoreMcp::Config
-  attr_reader :catalog, :quota, :web_origin, :image_origins
+  attr_reader :schema, :cache, :web_origin, :image_origins
   attr_accessor :allowed_hosts, :error_reporter
 
-  # @rbs (catalog: CoreMcp::_CatalogFactory, quota: CoreMcp::_QuotaFactory, web_origin: ::String, image_origins: ::Array[::String]) -> void
-  def initialize(catalog:, quota:, web_origin:, image_origins:)
-    @catalog = catalog
-    @quota = quota
+  # @rbs (schema: CoreMcp::_Schema, cache: CoreMcp::_Cache, web_origin: ::String, image_origins: ::Array[::String]) -> void
+  def initialize(schema:, cache:, web_origin:, image_origins:)
+    @schema = schema
+    @cache = cache
     @web_origin = web_origin
     @image_origins = image_origins
     @allowed_hosts = []

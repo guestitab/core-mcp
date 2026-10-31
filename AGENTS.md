@@ -1,8 +1,9 @@
 # core-mcp
 
-The gem owns Guestit's public MCP tools, schemas and widget. The host supplies
-a catalog, a quota, request metadata and allowed origins. Keep Rails, database,
-Redis and Core application constants in the host.
+The gem owns Guestit's public MCP tools, catalog queries and mapping, quotas,
+translations and widget. The host supplies its public GraphQL schema, shared
+cache, request metadata and allowed origins. Keep application model constants
+and Rails dependencies in the host; read catalog data through the schema.
 
 Use `bundle exec rake` for specs and RuboCop. Browser specs use WebKit through
 `bin/playwright`; run `bun install` and `bin/playwright install webkit` first.
