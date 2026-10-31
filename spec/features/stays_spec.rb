@@ -53,77 +53,19 @@ RSpec.describe 'Guestit MCP stays' do
     }
   end
   let(:host_page) do
-    html = script_json(CoreMcp::Widget.contents(server_context:).text)
-    initial_result = script_json(tool_result)
+    values = {
+      widget_html: script_json(CoreMcp::Widget.contents(server_context:).text),
+      initial_result: script_json(tool_result),
+      protocol_version: script_json(host_protocol_version),
+      capabilities: script_json(host_capabilities),
+      context: script_json(host_context),
+      defer_tool_responses:,
+      notify_tool_responses:,
+      answer_display_mode:
+    }
+    template = File.read(File.expand_path('../fixtures/mcp/host.html.erb', __dir__))
 
-    <<~HTML
-      <!DOCTYPE html>
-      <html lang="en">
-        <head><title>MCP test host</title></head>
-        <body>
-          <iframe id="stays" title="Guestit stays" style="width:100%;height:850px;border:0"></iframe>
-          <script>
-            const frame = document.getElementById('stays')
-            const initialResult = #{initial_result}
-            window.calls = []
-            window.opened = []
-            window.hostMessages = []
-            window.modelContext = []
-            window.displayModes = []
-            window.toolReplies = []
-            window.failTools = false
-            window.releaseToolResponses = () => {
-              window.toolReplies.splice(0).forEach(({ id, result }) => {
-                frame.contentWindow.postMessage({ jsonrpc: '2.0', id, result }, '*')
-              })
-            }
-            window.addEventListener('message', event => {
-              if (event.source !== frame.contentWindow) return
-              const request = event.data
-              window.hostMessages.push(request.method)
-              const reply = result => frame.contentWindow.postMessage({ jsonrpc: '2.0', id: request.id, result }, '*')
-              if (request.method === 'ui/initialize') {
-                if (request.params.protocolVersion !== '2026-01-26') {
-                  frame.contentWindow.postMessage({ jsonrpc: '2.0', id: request.id, error: { code: -32602, message: 'Invalid UI protocol version' } }, '*')
-                  return
-                }
-                reply({ protocolVersion: #{host_protocol_version.to_json}, hostCapabilities: #{host_capabilities.to_json}, hostContext: #{host_context.to_json} })
-              }
-              if (request.method === 'ui/notifications/initialized') {
-                frame.contentWindow.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/tool-result', params: initialResult }, '*')
-              }
-              if (request.method === 'tools/call') {
-                window.calls.push(request.params)
-                const response = structuredClone(initialResult)
-                response.structuredContent.view = request.params.name === 'compare_stays' ? 'compare' : 'details'
-                if (response.structuredContent.view === 'details') response.structuredContent.stays = [response.structuredContent.stays[0]]
-                const result = window.failTools ? { isError: true, content: [{ type: 'text', text: 'Details are temporarily unavailable.' }] } : response
-                if (#{defer_tool_responses}) window.toolReplies.push({ id: request.id, result })
-                else {
-                  if (#{notify_tool_responses}) frame.contentWindow.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/tool-result', params: result }, '*')
-                  reply(result)
-                }
-              }
-              if (request.method === 'ui/open-link') {
-                window.opened.push(request.params.url)
-                document.body.dataset.opened = window.opened.length
-                reply({})
-              }
-              if (request.method === 'ui/update-model-context') {
-                window.modelContext.push(request.params.content[0].text)
-                document.body.dataset.modelContext = window.modelContext.length
-                reply({})
-              }
-              if (request.method === 'ui/request-display-mode') {
-                window.displayModes.push(request.params.mode)
-                if (#{answer_display_mode}) reply({ mode: request.params.mode })
-              }
-            })
-            frame.srcdoc = #{html}
-          </script>
-        </body>
-      </html>
-    HTML
+    ERB.new(template).result_with_hash(values)
   end
 
   def script_json(value)
@@ -221,6 +163,30 @@ RSpec.describe 'Guestit MCP stays' do
         expect(page).to have_css('td', text: /SEK 990.*Lowest total/m, count: 1)
       end
     end
+  end
+
+  context 'with a dated booking link' do
+    let(:other_stay) do
+      super().merge(website_url: 'https://localhost/en/listings/city-flat?adults=2&endDate=2026-12-15&startDate=2026-12-10')
+    end
+
+    it 'opens the chosen comparison with its dates and guests' do
+      within_frame('stays') do
+        compare_stays('Lake house', 'City flat')
+        click_link 'Book on Guestit: City flat'
+      end
+
+      expect(page).to have_css('body[data-opened="1"][data-model-context="2"]', visible: :all)
+      expect(page.evaluate_script('window.opened')).to eq(['https://localhost/en/listings/city-flat?adults=2&endDate=2026-12-15&startDate=2026-12-10'])
+    end
+  end
+
+  it 'replaces the search results when the host refines the search' do
+    within_frame('stays') { expect(page).to have_button('View Lake house').and have_button('View City flat') }
+    refined = payload.merge(stays: [stay], pagination: { page: 1, total_pages: 1, total_count: 1 })
+    post_host_notification('ui/notifications/tool-result', structuredContent: refined)
+
+    within_frame('stays') { expect(page).to have_button('View Lake house').and have_no_button('View City flat') }
   end
 
   it 'preserves selected stays when the host reorders the stay fields' do
@@ -480,6 +446,27 @@ RSpec.describe 'Guestit MCP stays' do
 
     it 'shows the failure without interpreting it as markup' do
       within_frame('stays') { expect(page).to have_text('Please choose valid dates.') }
+    end
+  end
+
+  context 'when check-out is before check-in' do
+    let(:tool_result) do
+      context = server_context.merge(today: Date.new(2026, 10, 30))
+      arguments = {
+        listing_slug: 'lake-house',
+        num_guests: 2,
+        start_date: '2026-12-15',
+        end_date: '2026-12-10'
+      }
+
+      CoreMcp::Tools::StayDetails.call(server_context: context, **arguments).to_h
+    end
+
+    it 'shows the date refusal without offering a stay' do
+      within_frame('stays') do
+        expect(page).to have_text('Check-out must be after check-in.')
+        expect(page).to have_no_button('View Lake house').and have_no_link('Book on Guestit')
+      end
     end
   end
 

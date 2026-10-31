@@ -149,9 +149,14 @@ gem build core-mcp.gemspec
 bundle exec ruby script/check_package.rb core-mcp-<version>.gem
 ```
 
-Browser specs run in WebKit against a local MCP Apps host fixture. The
-widget host and GraphQL responses are fixtures; no live provider calls are made. The package
-check unpacks the built gem and loads it in a bundle containing only its runtime
-dependencies.
+Browser specs in `spec/features/stays_spec.rb` run in WebKit against
+`spec/fixtures/mcp/host.html.erb`. The host embeds the actual widget and supplies
+MCP Apps messages and tool responses. These specs check result updates, details,
+comparisons, booking links with dates and guests, errors and host interactions
+without Rails, a Core database or live provider calls. Core keeps request specs
+for its endpoint and Ruby integration specs against its real public GraphQL schema.
+
+The package check unpacks the built gem and loads it in a bundle containing only
+its runtime dependencies.
 
 Released under the [MIT License](LICENSE).

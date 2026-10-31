@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head><title>MCP test host</title></head>
+  <body>
+    <iframe id="stays" title="Guestit stays" style="width:100%;height:850px;border:0"></iframe>
+    <script>
+      const frame = document.getElementById('stays')
+      const initialResult = <%= initial_result %>
+      window.calls = []
+      window.opened = []
+      window.hostMessages = []
+      window.modelContext = []
+      window.displayModes = []
+      window.toolReplies = []
+      window.failTools = false
+      window.releaseToolResponses = () => {
+        window.toolReplies.splice(0).forEach(({ id, result }) => {
+          frame.contentWindow.postMessage({ jsonrpc: '2.0', id, result }, '*')
+        })
+      }
+      window.addEventListener('message', event => {
+        if (event.source !== frame.contentWindow) return
+        const request = event.data
+        window.hostMessages.push(request.method)
+        const reply = result => frame.contentWindow.postMessage({ jsonrpc: '2.0', id: request.id, result }, '*')
+        if (request.method === 'ui/initialize') {
+          if (request.params.protocolVersion !== '2026-01-26') {
+            frame.contentWindow.postMessage({ jsonrpc: '2.0', id: request.id, error: { code: -32602, message: 'Invalid UI protocol version' } }, '*')
+            return
+          }
+          reply({ protocolVersion: <%= protocol_version %>, hostCapabilities: <%= capabilities %>, hostContext: <%= context %> })
+        }
+        if (request.method === 'ui/notifications/initialized') {
+          frame.contentWindow.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/tool-result', params: initialResult }, '*')
+        }
+        if (request.method === 'tools/call') {
+          window.calls.push(request.params)
+          const response = structuredClone(initialResult)
+          response.structuredContent.view = request.params.name === 'compare_stays' ? 'compare' : 'details'
+          if (response.structuredContent.view === 'details') response.structuredContent.stays = [response.structuredContent.stays[0]]
+          const result = window.failTools ? { isError: true, content: [{ type: 'text', text: 'Details are temporarily unavailable.' }] } : response
+          if (<%= defer_tool_responses %>) window.toolReplies.push({ id: request.id, result })
+          else {
+            if (<%= notify_tool_responses %>) frame.contentWindow.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/tool-result', params: result }, '*')
+            reply(result)
+          }
+        }
+        if (request.method === 'ui/open-link') {
+          window.opened.push(request.params.url)
+          document.body.dataset.opened = window.opened.length
+          reply({})
+        }
+        if (request.method === 'ui/update-model-context') {
+          window.modelContext.push(request.params.content[0].text)
+          document.body.dataset.modelContext = window.modelContext.length
+          reply({})
+        }
+        if (request.method === 'ui/request-display-mode') {
+          window.displayModes.push(request.params.mode)
+          if (<%= answer_display_mode %>) reply({ mode: request.params.mode })
+        }
+      })
+      frame.srcdoc = <%= widget_html %>
+    </script>
+  </body>
+</html>
