@@ -1,0 +1,175 @@
+module CoreMcp
+  module Tools
+  end
+
+  type request_context = { ip_address: ::String, user_agent: ::String?, ai_platform: ::String?, today: ::Date }
+  type rack_response = [::Integer, ::Hash[::String, ::String], ::Array[::String]]
+  type server_context = ::MCP::ServerContext | ::Hash[::Symbol, untyped]
+  type arguments = ::Hash[::Symbol, untyped]
+  type stay_input = { start_date: ::String?, end_date: ::String?, num_guests: ::Integer }
+  type price = {
+    status: ::String,
+    currency: ::String,
+    total_minor: ::Integer?,
+    unit: ::String?,
+    unit_price_minor: ::Integer?,
+    cleaning_fee_minor: ::Integer?,
+    guest_fees: ::Array[::Hash[::Symbol, untyped]],
+    payment_schedule: ::Array[::Hash[::Symbol, untyped]],
+    inventory_held: bool,
+    start_date: ::String?,
+    end_date: ::String?
+  }
+  type listing = {
+    status: ::String,
+    listing_slug: ::String,
+    name: ::String?,
+    summary: ::String?,
+    website_url: ::String?,
+    rating_score: ::Numeric?,
+    num_reviews: ::Integer?,
+    ?cancellation_policy: ::String?,
+    ?house_rules: ::String?,
+    occupancy: ::Hash[::Symbol, untyped]?,
+    images: ::Array[::Hash[::Symbol, untyped]],
+    amenities: ::Array[::String],
+    price: price
+  }
+  type payload = {
+    view: ::String,
+    locale: ::String,
+    calculated_at: ::String,
+    requested_stay: stay_input?,
+    destinations: ::Array[::Hash[::Symbol, untyped]],
+    stays: ::Array[listing],
+    pagination: ::Hash[::Symbol, untyped]?,
+    applied_filters: arguments?
+  }
+end
+
+module CoreMcp
+  VERSION: ::String
+
+  interface _Catalog
+    def resolve_destination: (Inputs inputs) -> payload
+    def search_stays: (Inputs inputs) -> payload
+    def stay_details: (Inputs inputs) -> payload
+    def compare_stays: (Inputs inputs) -> payload
+  end
+
+  interface _CatalogFactory
+    def new: (server_context: server_context) -> _Catalog
+  end
+
+  interface _Quota
+    def spend!: (::String locale) -> void
+  end
+
+  interface _QuotaFactory
+    def new: (server_context: server_context) -> _Quota
+  end
+
+  class Error < ::StandardError
+  end
+
+  class ArgumentError < Error
+  end
+
+  interface _ErrorReporter
+    def call: (::Exception error, untyped context) -> void
+  end
+
+  class Config
+    attr_reader catalog: _CatalogFactory
+    attr_reader quota: _QuotaFactory
+    attr_reader web_origin: ::String
+    attr_reader image_origins: ::Array[::String]
+    attr_accessor allowed_hosts: ::Array[::String]
+    attr_accessor error_reporter: _ErrorReporter
+    def initialize: (catalog: _CatalogFactory, quota: _QuotaFactory, web_origin: ::String, image_origins: ::Array[::String]) -> void
+  end
+
+  class Inputs
+    MAX_NIGHTS: ::Integer
+    MAX_ADVANCE_DAYS: ::Integer
+    attr_reader arguments: arguments
+    @today: ::Date
+    def initialize: (arguments args, today: ::Date) -> void
+    def locale: () -> ::String
+    def dated?: () -> bool
+    def stay: () -> stay_input
+
+    private
+
+    def validate_dates!: () -> void
+    def validate_period!: (::Date from, ::Date to) -> void
+    def validate_budget!: () -> void
+  end
+
+  class Server
+    TOOLS: ::Array[singleton(::MCP::Tool)]
+    ICON: ::Hash[::Symbol, untyped]
+    @configuration: Config
+    def initialize: (configuration: Config) -> void
+    def call: (request: ::MCP::_HttpRequest, server_context: request_context) -> rack_response
+
+    private
+
+    def report_error: (::Exception error, untyped context) -> void
+  end
+
+  class Widget < ::MCP::Resource
+    URI: ::String
+    MIME_TYPE: ::String
+    TEMPLATE: ::String
+    LOGO: ::String
+    def self.contents: (server_context: server_context) -> ::MCP::Resource::TextContents
+    def self.configuration: (Config config) -> ::Hash[::Symbol, untyped]
+  end
+
+  module Tools
+    module Schemas
+      TEXT: ::Hash[::Symbol, untyped]
+      DATE: ::Hash[::Symbol, untyped]
+      LOCALE: ::Hash[::Symbol, untyped]
+      GUESTS: ::Hash[::Symbol, untyped]
+      NULL_TEXT: ::Hash[::Symbol, untyped]
+      NULL_NUMBER: ::Hash[::Symbol, untyped]
+      NULL_INTEGER: ::Hash[::Symbol, untyped]
+      STAY_INPUT: ::Hash[::Symbol, untyped]
+      DESTINATION_INPUT: ::Hash[::Symbol, untyped]
+      SEARCH_INPUT: ::Hash[::Symbol, untyped]
+      DETAILS_INPUT: ::Hash[::Symbol, untyped]
+      COMPARE_INPUT: ::Hash[::Symbol, untyped]
+      PRICE: ::Hash[::Symbol, untyped]
+      LISTING: ::Hash[::Symbol, untyped]
+      OUTPUT: ::Hash[::Symbol, untyped]
+      def self.object: (::Hash[::Symbol, untyped] properties, required: ::Array[::String]) -> ::Hash[::Symbol, untyped]
+    end
+
+    class Base < ::MCP::Tool
+      def self.inherited: (singleton(Base) subclass) -> void
+      def self.respond: (server_context: server_context, arguments: arguments) { (_Catalog, Inputs) -> payload } -> ::MCP::Tool::Response
+    end
+
+    class ResolveDestination < Base
+      KIND: ::String
+      def self.call: (query: ::String, server_context: server_context, ?locale: ::String) -> ::MCP::Tool::Response
+    end
+
+    class SearchStays < Base
+      KIND: ::String
+      def self.call: (server_context: server_context, **untyped arguments) -> ::MCP::Tool::Response
+    end
+
+    class StayDetails < Base
+      KIND: ::String
+      def self.call: (server_context: server_context, **untyped arguments) -> ::MCP::Tool::Response
+    end
+
+    class CompareStays < Base
+      KIND: ::String
+      def self.call: (server_context: server_context, **untyped arguments) -> ::MCP::Tool::Response
+    end
+  end
+end

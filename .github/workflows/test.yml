@@ -1,0 +1,23 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bin/playwright install --with-deps webkit
+      - run: bundle exec rake
+      - run: bundle exec rbs collection install
+      - run: bundle exec steep check --no-daemon -j 2
+      - run: gem build core-mcp.gemspec

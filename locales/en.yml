@@ -1,0 +1,71 @@
+en:
+  core_mcp:
+    stays:
+      title: Guestit stays
+      loading: Loading stays…
+      searching: Finding stays…
+      loading_details: Loading the stay…
+      comparing: Comparing stays…
+      results: Stays
+      results_count: "%{shown} of %{total} results"
+      comparison: Compare stays
+      night: night
+      nights: nights
+      guest: guest
+      guests: guests
+      sleeps: Sleeps %{count}
+      bedroom: bedroom
+      bedrooms: bedrooms
+      bed: bed
+      beds: beds
+      studio: Studio
+      pets: Pets allowed
+      no_pets: No pets
+      pets_label: Pets
+      rating: Guest rating %{score} out of 5 from %{count} reviews
+      rating_label: Guest rating
+      total: total
+      per_night: per night
+      per_month: per month
+      dates_required: Add dates for a price
+      unavailable: Not available for these dates
+      not_found: This stay is no longer listed.
+      view_stay: View %{name}
+      select_stay: Select %{name} for comparison
+      compare: Compare
+      compare_count: Compare %{count}
+      compare_hint: Pick two to four stays.
+      compare_dates: Add dates in the chat to compare prices.
+      cancel: Cancel
+      expand: Open full view
+      back: Back to results
+      previous: Previous stays
+      next: Next stays
+      booking_action: Book on Guestit
+      book_stay: "Book on Guestit: %{name}"
+      booking_note: You confirm dates and guests on Guestit. Nothing is booked yet.
+      price_note: Prices include cleaning and fees and are not held until you book.
+      price_checked: Price checked %{time}
+      includes: Includes
+      cleaning: Cleaning
+      payment_schedule: Payment schedule
+      due: Due %{date}
+      cancellation: Cancellation policy
+      house_rules: House rules
+      amenities: Amenities
+      lowest: Lowest total
+      empty: No stays match this search. Ask in the chat to change the dates, guests or budget.
+      error: We couldn't load these stays.
+      error_input: Something in this request couldn't be used. Ask in the chat to adjust it.
+      retry: Try again
+      cancelled: This request was cancelled.
+      disconnected: Open Guestit from your chat to explore stays.
+    inputs:
+      arguments:
+        budget_order: The maximum nightly rate must be at least the minimum.
+        check_in_past: Check-in must be today or later.
+        check_in_too_far: Check-in must be within the next %{days} days.
+        check_out_order: Check-out must be after check-in.
+        dates_incomplete: Choose both a check-in and a check-out date.
+        dates_invalid: Dates must be real calendar dates in YYYY-MM-DD format.
+        stay_too_long: A stay can be at most %{nights} nights.

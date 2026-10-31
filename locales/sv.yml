@@ -1,0 +1,62 @@
+sv:
+  core_mcp:
+    stays:
+      title: Guestit-boenden
+      loading: Laddar boenden…
+      searching: Söker boenden…
+      loading_details: Laddar boendet…
+      comparing: Jämför boenden…
+      results: Boenden
+      results_count: "%{shown} av %{total} resultat"
+      comparison: Jämför boenden
+      night: natt
+      nights: nätter
+      guest: gäst
+      guests: gäster
+      sleeps: Plats för %{count}
+      bedroom: sovrum
+      bedrooms: sovrum
+      bed: säng
+      beds: sängar
+      studio: Studio
+      pets: Husdjur tillåtna
+      no_pets: Inga husdjur
+      pets_label: Husdjur
+      rating: Gästbetyg %{score} av 5 från %{count} omdömen
+      rating_label: Gästbetyg
+      total: totalt
+      per_night: per natt
+      per_month: per månad
+      dates_required: Lägg till datum för pris
+      unavailable: Inte ledigt dessa datum
+      not_found: Boendet finns inte längre.
+      view_stay: Visa %{name}
+      select_stay: Välj %{name} att jämföra
+      compare: Jämför
+      compare_count: Jämför %{count}
+      compare_hint: Välj två till fyra boenden.
+      compare_dates: Lägg till datum i chatten för att jämföra priser.
+      cancel: Avbryt
+      expand: Öppna helskärm
+      back: Tillbaka till resultaten
+      previous: Föregående boenden
+      next: Nästa boenden
+      booking_action: Boka på Guestit
+      book_stay: "Boka på Guestit: %{name}"
+      booking_note: Du bekräftar datum och gäster på Guestit. Inget är bokat än.
+      price_note: Priserna inkluderar städning och avgifter och reserveras inte förrän du bokar.
+      price_checked: Pris kontrollerat %{time}
+      includes: Ingår
+      cleaning: Städning
+      payment_schedule: Betalningsplan
+      due: Förfaller %{date}
+      cancellation: Avbokningsvillkor
+      house_rules: Husregler
+      amenities: Bekvämligheter
+      lowest: Lägst totalpris
+      empty: Inga boenden matchar sökningen. Be chatten att ändra datum, antal gäster eller budget.
+      error: Vi kunde inte ladda boendena.
+      error_input: Något i förfrågan gick inte att använda. Be chatten att justera den.
+      retry: Försök igen
+      cancelled: Förfrågan avbröts.
+      disconnected: Öppna Guestit från chatten för att utforska boenden.

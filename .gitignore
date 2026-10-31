@@ -1,0 +1,41 @@
+### macOS
+# Finder metadata
+.DS_Store
+
+# Thumbnails
+._*
+
+# Custom folder icons
+Icon
+
+# Volume root files
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+### Ruby
+# Build artifacts
+*.gem
+*.rbc
+/coverage/
+/pkg/
+/tmp/
+
+# Bundler
+/.bundle/
+/vendor/bundle
+
+# Documentation cache and generated files
+/.yardoc/
+/doc/
+/rdoc/
+
+# Remove Gemfile.lock from gitignore if creating an application, leave it for libraries
+Gemfile.lock
+# .ruby-version
+/node_modules/
+/.gem_rbs_collection/

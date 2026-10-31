@@ -1,0 +1,70 @@
+module MCP
+  interface _HttpRequest
+    def env: () -> ::Hash[::String, untyped]
+    def body: () -> untyped
+    def content_length: () -> ::Integer?
+  end
+
+  class Configuration
+    def initialize: (?exception_reporter: ::Method | ^(::Exception, untyped) -> void, ?validate_tool_call_results: bool) -> void
+  end
+
+  class ServerContext
+    def []: (::Symbol | ::String key) -> untyped
+  end
+
+  class Tool
+    def self.inherited: (singleton(::MCP::Tool) subclass) -> void
+    def self.tool_name: (?::String value) -> ::String
+    def self.description: (?::String value) -> ::String
+    def self.title: (?::String value) -> ::String
+    def self.input_schema: (?untyped value) -> untyped
+    def self.output_schema: (?untyped value) -> untyped
+    def self.annotations: (?untyped value) -> untyped
+    def self.meta: (?untyped value) -> untyped
+    def self.to_h: () -> ::Hash[::Symbol, untyped]
+
+    class Response
+      def initialize: (?::Array[::Hash[::Symbol, untyped]] content, ?error: bool, ?structured_content: ::Hash[::Symbol, untyped]?, ?meta: ::Hash[::Symbol, untyped]?) -> void
+      def to_h: () -> ::Hash[::Symbol, untyped]
+      def error?: () -> bool
+    end
+  end
+
+  class Resource
+    def self.uri: (?::String value) -> ::String
+    def self.resource_name: (?::String value) -> ::String
+    def self.title: (?::String value) -> ::String
+    def self.description: (?::String value) -> ::String
+    def self.mime_type: (?::String value) -> ::String
+    def self.meta: (?untyped value) -> untyped
+    def self.to_h: () -> ::Hash[::Symbol, untyped]
+
+    class Contents
+      def to_h: () -> ::Hash[::Symbol, untyped]
+    end
+
+    class TextContents < Contents
+      def initialize: (text: ::String, uri: ::String, mime_type: ::String, ?meta: ::Hash[::String | ::Symbol, untyped]?) -> void
+    end
+  end
+
+  class Server
+    class RequestHandlerError < ::StandardError
+    end
+
+    def initialize: (name: ::String, ?title: ::String, ?version: ::String, ?icons: ::Array[::Hash[::Symbol, untyped]], ?tools: ::Array[singleton(::MCP::Tool)], ?resources: ::Array[singleton(::MCP::Resource)], ?server_context: ::Hash[::Symbol, untyped], ?configuration: ::MCP::Configuration, ?capabilities: ::Hash[::Symbol, untyped]) -> void
+
+    module Transports
+      class StreamableHTTPTransport
+        def initialize: (::MCP::Server server, ?stateless: bool, ?enable_json_response: bool, ?serve_subscriptions_listen: bool, ?max_request_bytes: ::Integer, ?allowed_hosts: ::Array[::String]) -> void
+        def handle_request: (::MCP::_HttpRequest request) -> [::Integer, ::Hash[::String, ::String], ::Array[::String]]
+      end
+    end
+  end
+
+  module Apps
+    def self.capability: () -> ::Hash[::String, untyped]
+    def self.tool_meta: (resource_uri: ::String) -> ::Hash[::Symbol, untyped]
+  end
+end

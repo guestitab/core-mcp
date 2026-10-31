@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %></title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: var(--color-text-primary, light-dark(#0d0d0d, #ececec));
+        --fg-2: var(--color-text-secondary, light-dark(#5d5d5d, #b4b4b4));
+        --bg: var(--color-background-primary, light-dark(#fff, #212121));
+        --bg-2: var(--color-background-secondary, light-dark(#f3f4f3, #2c2c2c));
+        --line: var(--color-border-primary, light-dark(rgb(13 13 13 / 13%), rgb(255 255 255 / 15%)));
+        --brand: light-dark(#0b6364, #9cd2c8);
+        --accent: light-dark(#0b6364, #7ac0b6);
+        --accent-hover: light-dark(#197775, #9cd2c8);
+        --accent-fg: light-dark(#fff, #00302f);
+        --danger: var(--color-text-danger, light-dark(#a3261d, #ff8a80));
+        --ring: var(--color-ring-primary, var(--accent));
+        --radius: var(--border-radius-lg, 16px);
+        --radius-sm: var(--border-radius-md, 10px);
+        --pill: var(--border-radius-full, 999px);
+        font: 15px/1.45 var(--font-sans, ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif);
+        color: var(--fg);
+      }
+      * { box-sizing: border-box; }
+      html, body { background: transparent; }
+      body { margin: 0; padding: 2px 2px 4px; }
+      body[data-display-mode="fullscreen"] { background: var(--bg); padding: 16px clamp(16px, 4vw, 40px) 40px; }
+      .shell { max-width: 1120px; margin: 0 auto; }
+      [hidden] { display: none !important; }
+      .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      button, a { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+      :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+      .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 10px; min-height: 32px; }
+      .bar-items { display: contents; }
+      .logo { display: block; flex: none; width: 72px; height: auto; color: var(--brand); }
+      .context { margin: 0; font-size: 13px; color: var(--fg-2); flex: 1 1 auto; }
+      .actions, .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .bar .actions { margin-left: auto; }
+      .hint { font-size: 13px; color: var(--fg-2); }
+      .sprite { position: absolute; width: 0; height: 0; }
+      .glyph { flex: none; width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+      .glyph-star { fill: currentColor; stroke: none; vertical-align: -.1em; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--pill); background: var(--bg); font-size: 13px; font-weight: 600; line-height: 1.2; text-decoration: none; cursor: pointer; }
+      .btn:hover:not(:disabled) { background: var(--bg-2); }
+      .btn.primary { border-color: transparent; background: var(--accent); color: var(--accent-fg); }
+      .btn.primary:hover:not(:disabled) { background: var(--accent-hover); }
+      .btn.ghost { border-color: transparent; background: transparent; padding-inline: 8px; }
+      .btn.icon { width: 32px; padding: 0; font-size: 16px; }
+      .btn.large { min-height: 44px; padding: 10px 18px; font-size: 15px; }
+      .btn:disabled { opacity: .5; cursor: default; }
+      .message { margin: 0 0 10px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--bg-2); font-size: 14px; }
+      .message[data-kind="error"] { border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent); }
+      .message p { margin: 0; }
+      .message .row-actions { margin-top: 10px; }
+      .carousel-wrap { position: relative; }
+      .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 24px) / 2.6); gap: 12px; margin: 0; padding: 2px 2px 6px; list-style: none; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; scrollbar-width: none; }
+      .carousel::-webkit-scrollbar { display: none; }
+      .carousel > li, .grid > li { min-width: 0; scroll-snap-align: start; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+      .nav { position: absolute; top: calc(30% - 16px); display: none; width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--bg); box-shadow: 0 1px 6px rgb(0 0 0 / 16%); font-size: 16px; line-height: 1; cursor: pointer; }
+      .nav.prev { left: 6px; }
+      .nav.next { right: 6px; }
+      @media (hover: hover) { .nav { display: grid; place-items: center; } }
+      .card { position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+      .card:hover { border-color: color-mix(in srgb, var(--fg) 30%, transparent); }
+      .card:has(.stretch:focus-visible) { outline: 2px solid var(--ring); outline-offset: 2px; }
+      .card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+      .card.muted .media img { opacity: .72; filter: grayscale(.35); }
+      .media { aspect-ratio: 3 / 2; background: var(--bg-2); }
+      .media img, .gallery img, .thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .card-body { display: flex; flex: 1; flex-direction: column; gap: 2px; padding: 10px 12px 12px; }
+      .card-title { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+      .stretch { padding: 0; border: 0; background: none; text-align: start; cursor: pointer; text-decoration: none; }
+      .stretch:focus-visible { outline: none; }
+      .stretch::after { content: ""; position: absolute; inset: 0; }
+      .stretch:disabled { cursor: default; }
+      .meta { margin: 2px 0 0; color: var(--fg-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .price { margin: auto 0 0; padding-top: 6px; font-size: 13px; color: var(--fg-2); }
+      .price strong { color: var(--fg); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .sub { margin: 0; color: var(--fg-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+      .state { margin: 6px 0 0; color: var(--fg-2); font-size: 13px; }
+      .card-body .state { margin-top: auto; padding-top: 6px; }
+      .check { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid #fff; border-radius: 50%; background: rgb(0 0 0 / 40%); color: #fff; font-size: 14px; }
+      .check .glyph { visibility: hidden; }
+      .card.selected .check { background: var(--accent); color: var(--accent-fg); }
+      .card.selected .check .glyph { visibility: visible; }
+      .foot { margin: 8px 0 0; color: var(--fg-2); font-size: 12px; }
+      .details { display: grid; gap: 14px; }
+      .details-side, .details-info { display: grid; gap: 14px; align-content: start; min-width: 0; }
+      .details.full .details-info { max-width: 72ch; }
+      .details.full { grid-template-areas: "gallery" "side" "info"; }
+      .details.full > .hero, .details.full > .gallery { grid-area: gallery; }
+      .details.full > .details-side { grid-area: side; }
+      .details.full > .details-info { grid-area: info; }
+      .hero { overflow: hidden; height: clamp(180px, 44vw, 320px); border-radius: var(--radius); background: var(--bg-2); }
+      .gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; overflow: hidden; aspect-ratio: 2 / 1; border-radius: var(--radius); background: var(--bg-2); }
+      .gallery img:first-child { grid-row: span 2; }
+      .gallery.single { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+      .title { margin: 0; font-size: 20px; line-height: 1.25; overflow-wrap: anywhere; }
+      .title:focus { outline: none; }
+      .summary { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+      .summary.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .price-box { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+      .price-box .amount { font-size: 22px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+      .price-box p { margin: 0; }
+      .price-box ul { margin: 2px 0 0; padding-inline-start: 18px; font-size: 13px; color: var(--fg-2); }
+      .price-box .row-actions { margin-top: 10px; }
+      .price-box .row-actions > * { flex: 1 1 auto; }
+      .price-box .hint { margin-top: 4px; }
+      .price-box .note { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--fg-2); font-size: 12px; }
+      details.policy { border-top: 1px solid var(--line); }
+      details.policy summary { display: flex; align-items: center; min-height: 42px; font-size: 14px; font-weight: 600; cursor: pointer; }
+      details.policy p { margin: 0 0 12px; font-size: 14px; white-space: pre-line; overflow-wrap: anywhere; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+      .chips li { padding: 4px 10px; border-radius: var(--pill); background: var(--bg-2); font-size: 13px; }
+      .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+      table { width: 100%; min-width: calc(128px + var(--columns, 2) * 172px); border-collapse: separate; border-spacing: 0; font-size: 14px; }
+      caption { padding: 0; text-align: start; }
+      th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: start; vertical-align: top; overflow-wrap: anywhere; }
+      tr:last-child > * { border-bottom: 0; }
+      tbody th { position: sticky; left: 0; z-index: 1; width: 128px; background: var(--bg); color: var(--fg-2); font-size: 13px; font-weight: 600; }
+      tbody th::first-letter { text-transform: uppercase; }
+      thead th { font-weight: 600; }
+      thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg); }
+      .thumb { aspect-ratio: 3 / 2; height: auto; max-height: 112px; margin-bottom: 8px; border-radius: var(--radius-sm); background: var(--bg-2); }
+      .badge { display: block; width: fit-content; margin-top: 4px; padding: 2px 8px; border-radius: var(--pill); background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); font-size: 12px; font-weight: 600; }
+      td strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+      .clamp4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+      .skeleton { border-radius: var(--radius); background: var(--bg-2); }
+      .skeleton.card-shape { aspect-ratio: 4 / 5; }
+      .skeleton.block { height: 220px; }
+      @media (prefers-reduced-motion: no-preference) {
+        .btn, .card { transition: background-color .15s ease-out, border-color .15s ease-out, box-shadow .15s ease-out; }
+        .skeleton { animation: pulse 1.4s ease-in-out infinite; }
+        @keyframes pulse { 50% { opacity: .55; } }
+      }
+      @media (pointer: coarse) { .btn { min-height: 44px; } .btn.icon { width: 44px; } }
+      @media (max-width: 760px) { .bar:has(.back) .context { order: 3; flex-basis: 100%; } }
+      @media (max-width: 560px) { .carousel { grid-auto-columns: 74%; } .grid { grid-template-columns: 1fr 1fr; gap: 10px; } .context { order: 3; flex-basis: 100%; } }
+      @media (max-width: 380px) { .grid { grid-template-columns: 1fr; } }
+      @media (min-width: 880px) { .details.full { grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "gallery side" "info side"; align-items: start; } .details.full .details-side { position: sticky; top: 16px; } }
+    </style>
+  </head>
+  <body data-configuration="<%= configuration %>" data-display-mode="inline">
+    <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="glyph-back" viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></symbol>
+      <symbol id="glyph-next" viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></symbol>
+      <symbol id="glyph-expand" viewBox="0 0 16 16"><path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9"/></symbol>
+      <symbol id="glyph-external" viewBox="0 0 16 16"><path d="m4 12 8-8M5.5 4H12v6.5"/></symbol>
+      <symbol id="glyph-check" viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></symbol>
+      <symbol id="glyph-star" viewBox="0 0 16 16"><path d="m8 1.6 1.96 3.98 4.39.64-3.18 3.1.75 4.37L8 12.63l-3.92 2.06.75-4.37-3.18-3.1 4.39-.64z"/></symbol>
+    </svg>
+    <div class="shell">
+      <header class="bar">
+        <%= logo %>
+        <div id="bar" class="bar-items"></div>
+      </header>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+      <main id="view" tabindex="-1" aria-busy="true"></main>
+      <p id="foot" class="foot"></p>
+    </div>
+    <script>
+      (() => {
+        const configuration = JSON.parse(document.body.dataset.configuration)
+        const protocolVersion = '2026-01-26'
+        const svgNamespace = 'http://www.w3.org/2000/svg'
+        const maxCompared = 4
+        const readViews = { stay_details: 'details', compare_stays: 'compare' }
+        const layoutKeys = ['displayMode', 'availableDisplayModes', 'locale']
+        const bar = document.getElementById('bar')
+        const message = document.getElementById('message')
+        const view = document.getElementById('view')
+        const foot = document.getElementById('foot')
+        const selected = new Set()
+        const pending = new Map()
+        let locale = 'en'
+        let hostCapabilities = {}
+        let hostContext = {}
+        let hostOrigin = '*'
+        let initialized = false
+        let disposed = false
+        let nextId = 0
+        let operation = 0
+        let base = null
+        let data = null
+        let searchData = null
+        let selecting = false
+        let failure = null
+        let activeRead = null
+        let lastRead = null
+        let switching = false
+        let modelNotes = []
+        let returnSlug = null
+        let resizeFrame = null
+        let notifiedHeight = 0
+        let notifiedWidth = 0
+
+        const t = (key, params = {}) => String(configuration.labels[locale]?.[key] ?? '').replace(/%\{(\w+)\}/g, (_, name) => String(params[name] ?? ''))
+        const h = (tag, properties = {}, ...children) => {
+          const node = document.createElement(tag)
+          for (const [key, value] of Object.entries(properties)) {
+            if (value === null || value === undefined || value === false) continue
+            if (key === 'class') node.className = value
+            else if (key === 'text') node.textContent = String(value)
+            else if (key.startsWith('on')) node.addEventListener(key.slice(2), value)
+            else node.setAttribute(key, value === true ? '' : String(value))
+          }
+          node.append(...children.flat().filter(child => child !== null && child !== undefined && child !== false).map(child => (typeof child === 'string' || typeof child === 'number') ? String(child) : child))
+          return node
+        }
+        const glyph = (name) => {
+          const graphic = document.createElementNS(svgNamespace, 'svg')
+          const use = document.createElementNS(svgNamespace, 'use')
+          graphic.setAttribute('class', `glyph glyph-${name}`)
+          graphic.setAttribute('aria-hidden', 'true')
+          use.setAttribute('href', `#glyph-${name}`)
+          graphic.append(use)
+          return graphic
+        }
+        const mode = () => (hostContext.displayMode === 'fullscreen' ? 'fullscreen' : 'inline')
+        const canFullscreen = () => Array.isArray(hostContext.availableDisplayModes) && hostContext.availableDisplayModes.includes('fullscreen')
+        const smooth = () => (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth')
+        const formatLocale = () => {
+          const fallback = locale === 'sv' ? 'sv-SE' : 'en-GB'
+          const preferred = typeof hostContext.locale === 'string' ? hostContext.locale : ''
+          if (!preferred.toLowerCase().startsWith(locale)) return fallback
+          try {
+            return Intl.getCanonicalLocales(preferred)[0] || fallback
+          } catch {
+            return fallback
+          }
+        }
+        const parseDate = (value) => {
+          if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+          const parsed = new Date(`${value}T12:00:00Z`)
+          return Number.isNaN(parsed.getTime()) ? null : parsed
+        }
+        const dayFormat = () => new Intl.DateTimeFormat(formatLocale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+        const formatDate = (value) => {
+          const parsed = parseDate(value)
+          return parsed ? dayFormat().format(parsed) : ''
+        }
+        const formatRange = (from, to) => {
+          const start = parseDate(from)
+          const end = parseDate(to)
+          if (!start || !end) return ''
+          const format = dayFormat()
+          return typeof format.formatRange === 'function' ? format.formatRange(start, end) : `${format.format(start)} – ${format.format(end)}`
+        }
+        const nightsBetween = (from, to) => {
+          const start = parseDate(from)
+          const end = parseDate(to)
+          return start && end ? Math.round((end - start) / 86400000) : null
+        }
+        const money = (amount, currency, { whole = false } = {}) => {
+          if (!Number.isSafeInteger(amount)) return ''
+          try {
+            const digits = new Intl.NumberFormat(formatLocale(), { style: 'currency', currency }).resolvedOptions().maximumFractionDigits
+            const major = whole ? Math.round(amount / 10 ** digits) : amount / 10 ** digits
+            const fraction = Number.isInteger(major) ? 0 : digits
+            return new Intl.NumberFormat(formatLocale(), { style: 'currency', currency, minimumFractionDigits: fraction, maximumFractionDigits: fraction }).format(major)
+          } catch {
+            return ''
+          }
+        }
+        const counted = (count, one, many) => `${count} ${t(count === 1 ? one : many)}`
+        const safeUrl = (value, origins) => {
+          try {
+            const url = new URL(value)
+            if (url.username || url.password || !origins.includes(url.origin)) return null
+            if (url.protocol !== 'https:' && !(url.protocol === 'http:' && url.hostname === 'localhost')) return null
+            return url.href
+          } catch {
+            return null
+          }
+        }
+        const hasDates = payload => Boolean(payload?.requested_stay?.start_date && payload?.requested_stay?.end_date)
+        const stayLine = (payload) => {
+          const stay = payload?.requested_stay
+          if (!stay) return ''
+          const parts = []
+          if (hasDates(payload)) {
+            parts.push(formatRange(stay.start_date, stay.end_date))
+            const nights = nightsBetween(stay.start_date, stay.end_date)
+            if (nights) parts.push(counted(nights, 'night', 'nights'))
+          }
+          if (Number.isInteger(stay.num_guests)) parts.push(counted(stay.num_guests, 'guest', 'guests'))
+          return parts.filter(Boolean).join(' · ')
+        }
+        const stayArguments = () => {
+          const stay = data.requested_stay
+          const args = { num_guests: stay.num_guests, locale }
+          if (hasDates(data)) {
+            args.start_date = stay.start_date
+            args.end_date = stay.end_date
+          }
+          return args
+        }
+        const estimate = (price) => {
+          if (price?.status !== 'estimated') return null
+          const total = money(price.total_minor, price.currency)
+          if (!total) return null
+          const nights = nightsBetween(price.start_date, price.end_date)
+          const unit = price.unit === 'month' ? t('per_month') : t('per_night')
+          const perUnit = money(price.unit_price_minor, price.currency, { whole: true })
+          return { total, nights, perUnit: perUnit ? `${perUnit} ${unit}` : '' }
+        }
+        const priceState = price => t(price?.status === 'dates_required' ? 'dates_required' : 'unavailable')
+        const rating = (stay) => {
+          if (typeof stay.rating_score !== 'number') return null
+          const score = new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 1 }).format(stay.rating_score)
+          const reviews = Number.isInteger(stay.num_reviews) ? stay.num_reviews : 0
+          return h('span', { 'aria-label': t('rating', { score, count: reviews }) }, glyph('star'), ` ${score} (${reviews})`)
+        }
+        const facts = (stay, { beds = false, pets = false } = {}) => {
+          const occupancy = stay.occupancy
+          const parts = []
+          if (occupancy) {
+            if (Number.isInteger(occupancy.num_guests)) parts.push(t('sleeps', { count: occupancy.num_guests }))
+            if (Number.isInteger(occupancy.num_bedrooms)) parts.push(occupancy.num_bedrooms === 0 ? t('studio') : counted(occupancy.num_bedrooms, 'bedroom', 'bedrooms'))
+            if (beds && Number.isInteger(occupancy.num_beds)) parts.push(counted(occupancy.num_beds, 'bed', 'beds'))
+            if (pets && occupancy.pets_allowed === true) parts.push(t('pets'))
+          }
+          const nodes = parts.flatMap((part, index) => (index ? [' · ', part] : [part]))
+          const score = rating(stay)
+          if (score) nodes.push(...(nodes.length ? [' · ', score] : [score]))
+          return nodes
+        }
+        const photo = (image, name, className) => {
+          const url = image && safeUrl(image.url, configuration.image_origins)
+          if (!url) return null
+          return h('img', { class: className, src: url, alt: image.alt_text || name || '', loading: 'lazy', decoding: 'async', referrerpolicy: 'no-referrer' })
+        }
+        const bookingUrl = stay => safeUrl(stay.website_url, [configuration.web_origin])
+
+        const notify = (method, params) => window.parent.postMessage({ jsonrpc: '2.0', method, params }, hostOrigin)
+        const request = (method, params, wait = 15000) => new Promise((resolve, reject) => {
+          const id = `guestit-${++nextId}`
+          const timeout = window.setTimeout(() => {
+            pending.delete(id)
+            reject(new Error(t('error')))
+          }, wait)
+          pending.set(id, { resolve, reject, timeout })
+          window.parent.postMessage({ jsonrpc: '2.0', id, method, params }, hostOrigin)
+        })
+        const tellModel = (text) => {
+          if (!initialized || disposed) return
+          modelNotes = [...modelNotes.filter(note => note !== text), text].slice(-4)
+          request('ui/update-model-context', { content: [{ type: 'text', text: modelNotes.join('\n') }] }).catch(() => {})
+        }
+        const requestMode = async (next) => {
+          if (!canFullscreen() || mode() === next) return
+          switching = true
+          setBusy(true)
+          try {
+            const result = await request('ui/request-display-mode', { mode: next }, 2000)
+            hostContext = { ...hostContext, displayMode: result?.mode === 'fullscreen' ? 'fullscreen' : 'inline' }
+          } catch {
+            document.body.dataset.displayMode = mode()
+          } finally {
+            switching = false
+          }
+          document.body.dataset.displayMode = mode()
+        }
+
+        const showMessage = (text, kind = 'status', actions = []) => {
+          message.dataset.kind = kind
+          message.setAttribute('role', kind === 'error' ? 'alert' : 'status')
+          message.replaceChildren(...(text ? [h('p', { text }), actions.length ? h('div', { class: 'row-actions' }, actions) : null] : []).filter(Boolean))
+          message.hidden = !text
+        }
+        const skeleton = (kind) => {
+          if (kind === 'search' && mode() === 'inline') return h('div', { class: 'carousel', 'aria-hidden': 'true' }, [0, 1, 2].map(() => h('div', { class: 'skeleton card-shape' })))
+          return h('div', { 'aria-hidden': 'true' }, h('div', { class: 'skeleton block' }))
+        }
+        const setBusy = (value) => {
+          view.setAttribute('aria-busy', String(value))
+          document.querySelectorAll('#view button, #bar button').forEach((control) => {
+            control.disabled = value || control.dataset.disabled === 'true'
+          })
+        }
+        const focusTitle = () => {
+          const title = view.querySelector('.title, caption') || view
+          title.tabIndex = -1
+          title.focus({ preventScroll: mode() === 'inline' })
+        }
+        const focusCard = (slug) => {
+          const target = slug && view.querySelector(`button[data-listing-slug="${CSS.escape(slug)}"]`)
+          if (!target) return focusTitle()
+          target.closest('li')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+          target.focus({ preventScroll: true })
+        }
+
+        const callTool = async (name, args) => {
+          if (activeRead || disposed) return
+          const current = ++operation
+          const call = { name, arguments: args }
+          activeRead = call
+          failure = null
+          render()
+          try {
+            const response = await request('tools/call', call)
+            if (current !== operation || disposed) return
+            activeRead = null
+            receive(response, call)
+            if (!response?.isError) focusTitle()
+          } catch (error) {
+            if (current === operation && !disposed) {
+              activeRead = null
+              fail(t('error'), call)
+            }
+          }
+        }
+        const fail = (text, call = null) => {
+          failure = { text, call }
+          data = null
+          render()
+        }
+        const errorText = (result) => {
+          const text = (result?.content || []).filter(item => item.type === 'text').map(item => item.text).join('\n').trim()
+          if (!text || /^(Invalid arguments|Missing required arguments)/.test(text)) return t(text ? 'error_input' : 'error')
+          return text
+        }
+        const slugList = payload => (payload?.stays || []).map(stay => stay.listing_slug).join(',')
+        const receive = (result, call = null) => {
+          if (result?.isError) return fail(errorText(result), call)
+          const payload = result?.structuredContent
+          if (!payload || !Array.isArray(payload.stays)) return fail(t('error'), call)
+          locale = payload.locale === 'sv' ? 'sv' : 'en'
+          failure = null
+          data = payload
+          if (call) lastRead = { view: payload.view, slugs: slugList(payload) }
+          else {
+            base = payload
+            lastRead = null
+          }
+          if (payload.view === 'search') {
+            const changed = ['start_date', 'end_date', 'num_guests'].some(key => searchData?.requested_stay?.[key] !== payload.requested_stay?.[key])
+            if (changed) {
+              selected.clear()
+              selecting = false
+            }
+            searchData = payload
+            const slugs = new Set(payload.stays.map(stay => stay.listing_slug))
+            selected.forEach((slug) => {
+              if (!slugs.has(slug)) selected.delete(slug)
+            })
+          }
+          if (payload.view !== 'search') selecting = false
+          render()
+          if (call?.name === 'stay_details') describeDetails(payload)
+          if (call?.name === 'compare_stays') describeComparison(payload)
+        }
+        const describeDetails = (payload) => {
+          const stay = payload.stays[0]
+          if (!stay || stay.status !== 'found') return
+          const price = estimate(stay.price)
+          const total = price ? `, estimated total ${price.total}` : ''
+          tellModel(`In the Guestit widget the traveler opened "${stay.name}" (listing_slug ${stay.listing_slug}) for ${stayLine(payload)}${total}.`)
+        }
+        const describeComparison = (payload) => {
+          const stays = payload.stays.filter(stay => stay.status === 'found').map(stay => `"${stay.name}" (listing_slug ${stay.listing_slug}${estimate(stay.price) ? `, ${estimate(stay.price).total}` : ''})`)
+          tellModel(`In the Guestit widget the traveler compared ${stays.join(', ')} for ${stayLine(payload)}.`)
+        }
+        const refreshSelection = () => {
+          view.querySelectorAll('article[data-listing-slug]').forEach((article) => {
+            const slug = article.dataset.listingSlug
+            const chosen = selected.has(slug)
+            const button = article.querySelector('button.stretch')
+            article.classList.toggle('selected', selecting && chosen)
+            if (!button || !selecting) return
+            button.setAttribute('aria-pressed', String(chosen))
+            button.dataset.disabled = String(!chosen && selected.size >= maxCompared)
+            button.disabled = Boolean(activeRead) || button.dataset.disabled === 'true'
+          })
+          renderBar()
+        }
+
+        const openStay = async (stay) => {
+          if (activeRead || switching || !data) return
+          const current = operation
+          const args = { ...stayArguments(), listing_slug: stay.listing_slug }
+          returnSlug = stay.listing_slug
+          await requestMode('fullscreen')
+          if (current !== operation || disposed) return render()
+          callTool('stay_details', args)
+        }
+        const startSelecting = async () => {
+          if (activeRead || switching) return
+          const current = operation
+          await requestMode('fullscreen')
+          if (current === operation && data?.view === 'search') selecting = true
+          render()
+        }
+        const compareSelected = () => {
+          returnSlug = null
+          callTool('compare_stays', { ...stayArguments(), listing_slugs: [...selected] })
+        }
+        const toggle = (slug) => {
+          if (selected.has(slug)) selected.delete(slug)
+          else if (selected.size < maxCompared) selected.add(slug)
+          refreshSelection()
+        }
+        const back = () => {
+          if (!searchData || activeRead) return
+          operation++
+          failure = null
+          data = searchData
+          render()
+          focusCard(returnSlug)
+        }
+        const openBooking = async (event, stay, url) => {
+          if (!hostCapabilities.openLinks) return
+          event.preventDefault()
+          try {
+            await request('ui/open-link', { url })
+            tellModel(`In the Guestit widget the traveler opened the booking page for "${stay.name}" (listing_slug ${stay.listing_slug}). Nothing is booked until they finish on Guestit.`)
+          } catch {
+            showMessage(t('error'), 'error')
+          }
+        }
+
+        const bookingLink = (stay, { large = false, named = false } = {}) => {
+          const url = bookingUrl(stay)
+          if (!url || stay.status !== 'found') return null
+          const label = named ? t('book_stay', { name: stay.name || stay.listing_slug }) : null
+          return h('a', { class: `btn primary${large ? ' large' : ''}`, href: url, target: '_blank', rel: 'noopener noreferrer', 'aria-label': label, onclick: event => openBooking(event, stay, url) }, t('booking_action'), glyph('external'))
+        }
+        const cardAction = (stay) => {
+          const name = stay.name || stay.listing_slug
+          if (stay.status === 'found' && hostCapabilities.serverTools) {
+            if (selecting) {
+              const disabled = !selected.has(stay.listing_slug) && selected.size >= maxCompared
+              return h('button', { type: 'button', class: 'stretch', 'data-listing-slug': stay.listing_slug, 'aria-pressed': String(selected.has(stay.listing_slug)), 'aria-label': t('select_stay', { name }), 'data-disabled': String(disabled), disabled, onclick: () => toggle(stay.listing_slug) }, name)
+            }
+            return h('button', { type: 'button', class: 'stretch', 'data-listing-slug': stay.listing_slug, 'aria-label': t('view_stay', { name }), onclick: () => openStay(stay) }, name)
+          }
+          const url = bookingUrl(stay)
+          if (url && stay.status === 'found') return h('a', { class: 'stretch', href: url, target: '_blank', rel: 'noopener noreferrer', onclick: event => openBooking(event, stay, url) }, name)
+          return h('span', {}, name)
+        }
+        const card = (stay) => {
+          const price = estimate(stay.price)
+          const found = stay.status === 'found'
+          const unavailable = !found || stay.price?.status === 'unavailable'
+          const classes = ['card', unavailable && 'muted', selecting && selected.has(stay.listing_slug) && 'selected'].filter(Boolean).join(' ')
+          const body = h('div', { class: 'card-body' },
+            h('h3', { class: 'card-title' }, cardAction(stay)),
+            found ? h('p', { class: 'meta' }, facts(stay)) : null,
+            !found ? h('p', { class: 'state', text: t('not_found') }) : null,
+            found && price ? h('p', { class: 'price' }, h('strong', { text: price.total }), ` ${t('total')}`) : null,
+            found && price ? h('p', { class: 'sub', text: [price.nights && counted(price.nights, 'night', 'nights'), price.perUnit].filter(Boolean).join(' · ') }) : null,
+            found && !price ? h('p', { class: 'state', text: priceState(stay.price) }) : null)
+          const check = selecting && found ? h('span', { class: 'check', 'aria-hidden': 'true' }, glyph('check')) : null
+          return h('li', {}, h('article', { class: classes, 'data-listing-slug': stay.listing_slug }, h('div', { class: 'media' }, photo(stay.images?.[0], stay.name, null)), body, check))
+        }
+        const carousel = (list) => {
+          const step = direction => list.scrollBy({ left: direction * list.clientWidth * 0.8, behavior: smooth() })
+          const previous = h('button', { type: 'button', class: 'nav prev', 'aria-label': t('previous'), onclick: () => step(-1) }, glyph('back'))
+          const next = h('button', { type: 'button', class: 'nav next', 'aria-label': t('next'), onclick: () => step(1) }, glyph('next'))
+          const sync = () => {
+            previous.hidden = list.scrollLeft < 4
+            next.hidden = list.scrollLeft + list.clientWidth >= list.scrollWidth - 4
+          }
+          list.addEventListener('scroll', () => window.requestAnimationFrame(sync), { passive: true })
+          window.requestAnimationFrame(sync)
+          return h('div', { class: 'carousel-wrap' }, list, previous, next)
+        }
+        const renderSearch = () => {
+          const stays = data.stays.slice(0, 10)
+          const list = h('ul', { class: mode() === 'inline' ? 'carousel' : 'grid', 'aria-label': t('results') }, stays.map(card))
+          view.replaceChildren(list.classList.contains('carousel') ? carousel(list) : list)
+          const pagination = data.pagination
+          const count = pagination && pagination.total_count > stays.length ? t('results_count', { shown: stays.length, total: pagination.total_count }) : ''
+          const note = stays.some(stay => estimate(stay.price)) ? t('price_note') : ''
+          foot.textContent = [count, note].filter(Boolean).join(' · ')
+        }
+        const gallery = (stay, full) => {
+          const images = (stay.images || []).map(image => photo(image, stay.name, null)).filter(Boolean)
+          if (!images.length) return null
+          if (!full) return h('div', { class: 'hero' }, images[0])
+          return h('div', { class: `gallery${images.length < 3 ? ' single' : ''}` }, images.length < 3 ? images[0] : images.slice(0, 3))
+        }
+        const priceBox = (payload, stay, actions) => {
+          const price = estimate(stay.price)
+          const line = stayLine(payload)
+          if (!price) return h('div', { class: 'price-box' }, h('p', { class: 'state', text: priceState(stay.price) }), line ? h('p', { class: 'sub', text: line }) : null, actions)
+          const lines = []
+          if (stay.price.cleaning_fee_minor) lines.push(`${t('cleaning')} ${money(stay.price.cleaning_fee_minor, stay.price.currency)}`)
+          ;(stay.price.guest_fees || []).forEach(fee => lines.push(`${fee.name} ${money(fee.amount_minor, stay.price.currency)}`))
+          const schedule = (stay.price.payment_schedule || []).map(payment => h('li', { text: `${t('due', { date: formatDate(payment.payment_date) })}: ${money(payment.amount_minor, stay.price.currency)}` }))
+          const checked = new Date(payload.calculated_at)
+          const time = Number.isNaN(checked.getTime()) ? '' : new Intl.DateTimeFormat(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(checked)
+          return h('div', { class: 'price-box' },
+            h('p', {}, h('span', { class: 'amount', text: price.total }), ` ${t('total')}`),
+            line ? h('p', { class: 'sub', text: line }) : null,
+            price.perUnit ? h('p', { class: 'sub', text: price.perUnit }) : null,
+            lines.length ? h('p', { class: 'sub', text: `${t('includes')}: ${lines.join(' · ')}` }) : null,
+            schedule.length ? h('p', { class: 'sub', text: t('payment_schedule') }) : null,
+            schedule.length ? h('ul', {}, schedule) : null,
+            actions,
+            h('p', { class: 'note', text: [t('price_note'), time && t('price_checked', { time })].filter(Boolean).join(' ') }))
+        }
+        const policy = (title, text, open) => (text ? h('details', { class: 'policy', open }, h('summary', { text: title }), h('p', { text })) : null)
+        const renderDetails = () => {
+          const stay = data.stays[0]
+          if (!stay) return view.replaceChildren()
+          const full = mode() === 'fullscreen'
+          const title = h('h2', { class: 'title', tabindex: '-1' }, stay.name || stay.listing_slug)
+          if (stay.status !== 'found') {
+            view.replaceChildren(h('article', { class: 'details' }, title, h('p', { class: 'state', text: t('not_found') })))
+            foot.textContent = ''
+            return
+          }
+          const secondary = !full && canFullscreen() ? h('button', { type: 'button', class: 'btn large', onclick: () => requestMode('fullscreen').then(render) }, t('expand')) : null
+          const amenities = stay.amenities?.length ? h('details', { class: 'policy', open: full }, h('summary', { text: t('amenities') }), h('ul', { class: 'chips' }, stay.amenities.slice(0, 20).map(amenity => h('li', { text: amenity })))) : null
+          const actions = [h('div', { class: 'row-actions' }, bookingLink(stay, { large: true }), secondary), h('p', { class: 'hint', text: t('booking_note') })]
+          const side = h('div', { class: 'details-side' },
+            h('div', {}, title, h('p', { class: 'meta' }, facts(stay, { beds: true, pets: true }))),
+            priceBox(data, stay, actions))
+          const info = h('div', { class: 'details-info' },
+            stay.summary ? h('p', { class: `summary${full ? '' : ' clamp'}`, text: stay.summary }) : null,
+            h('div', {}, policy(t('cancellation'), stay.cancellation_policy, full), policy(t('house_rules'), stay.house_rules, false), amenities))
+          view.replaceChildren(h('article', { class: `details${full ? ' full' : ''}` }, gallery(stay, full), side, info))
+          foot.textContent = ''
+        }
+        const renderCompare = () => {
+          const stays = data.stays
+          const totals = stays.map(stay => (estimate(stay.price) ? stay.price.total_minor : null)).filter(Number.isSafeInteger)
+          const lowest = new Set(totals).size > 1 ? Math.min(...totals) : null
+          const head = h('tr', {}, h('th', { scope: 'col' }, h('span', { class: 'visually-hidden', text: t('comparison') })),
+            stays.map(stay => h('th', { scope: 'col' }, photo(stay.images?.[0], stay.name, 'thumb'), h('span', { text: stay.name || stay.listing_slug }))))
+          const cell = (stay, value) => (stay.status === 'found' ? value(stay) : '—')
+          const rows = [
+            [t('total'), stay => (estimate(stay.price) ? [h('strong', { text: estimate(stay.price).total }), stay.price.total_minor === lowest ? h('span', { class: 'badge', text: t('lowest') }) : null] : priceState(stay.price))],
+            [stays.some(stay => stay.price?.unit === 'month') ? t('per_month') : t('per_night'), stay => (estimate(stay.price) && money(stay.price.unit_price_minor, stay.price.currency, { whole: true })) || '—'],
+            [t('sleeps', { count: '' }).trim(), stay => String(stay.occupancy?.num_guests ?? '—')],
+            [t('bedrooms'), stay => (stay.occupancy?.num_bedrooms === 0 ? t('studio') : String(stay.occupancy?.num_bedrooms ?? '—'))],
+            [t('beds'), stay => String(stay.occupancy?.num_beds ?? '—')],
+            [t('rating_label'), stay => rating(stay) || '—'],
+            [t('pets_label'), stay => t(stay.occupancy?.pets_allowed ? 'pets' : 'no_pets')],
+            [t('cancellation'), stay => (stay.cancellation_policy ? h('span', { class: 'clamp4', text: stay.cancellation_policy }) : '—')],
+          ]
+          const body = rows.map(([label, value]) => h('tr', {}, h('th', { scope: 'row', text: label }), stays.map(stay => h('td', {}, cell(stay, value)))))
+          body.push(h('tr', {}, h('th', { scope: 'row' }, h('span', { class: 'visually-hidden', text: t('booking_action') })), stays.map(stay => h('td', {}, stay.status === 'found' ? bookingLink(stay, { named: true }) : t('not_found')))))
+          const table = h('table', { style: `--columns: ${stays.length}` }, h('caption', { class: 'visually-hidden', text: t('comparison') }), h('thead', {}, head), h('tbody', {}, body))
+          view.replaceChildren(h('h2', { class: 'title', tabindex: '-1', text: t('comparison') }), h('div', { class: 'table-wrap', style: 'margin-top: 12px' }, table))
+          foot.textContent = t('booking_note')
+        }
+        const renderBar = () => {
+          const items = []
+          if (searchData && (failure || activeRead || (data && data !== searchData))) items.push(h('button', { type: 'button', class: 'btn ghost back', onclick: back }, glyph('back'), t('back')))
+          const context = data?.view === 'details' ? '' : stayLine(data || searchData)
+          if (context) items.push(h('p', { class: 'context', text: context }))
+          const actions = []
+          if (data?.view === 'search' && !failure) {
+            const comparable = hostCapabilities.serverTools && data.stays.filter(stay => stay.status === 'found').length > 1
+            if (comparable && hasDates(data) && selecting) {
+              actions.push(h('span', { class: 'hint', text: t('compare_hint') }))
+              actions.push(h('button', { type: 'button', class: 'btn', onclick: () => { selecting = false; render() } }, t('cancel')))
+              actions.push(h('button', { type: 'button', class: 'btn primary', 'data-disabled': String(selected.size < 2), disabled: selected.size < 2, onclick: compareSelected }, t('compare_count', { count: selected.size })))
+            } else if (comparable && hasDates(data)) {
+              actions.push(h('button', { type: 'button', class: 'btn', onclick: startSelecting }, t('compare')))
+            } else if (comparable) {
+              actions.push(h('span', { class: 'hint', text: t('compare_dates') }))
+            }
+          }
+          if (data && !failure && !activeRead && data.view !== 'details' && mode() === 'inline' && canFullscreen()) {
+            actions.push(h('button', { type: 'button', class: 'btn icon', 'aria-label': t('expand'), title: t('expand'), onclick: () => requestMode('fullscreen').then(render) }, glyph('expand')))
+          }
+          bar.replaceChildren(...items, actions.length ? h('div', { class: 'actions' }, actions) : '')
+        }
+        const render = () => {
+          document.documentElement.lang = locale
+          document.body.dataset.displayMode = mode()
+          renderBar()
+          if (activeRead) {
+            showMessage(t(activeRead.name === 'compare_stays' ? 'comparing' : 'loading_details'))
+            view.replaceChildren(skeleton(activeRead.name))
+            foot.textContent = ''
+            setBusy(true)
+            return
+          }
+          if (failure) {
+            const actions = failure.call ? [h('button', { type: 'button', class: 'btn', onclick: () => callTool(failure.call.name, failure.call.arguments) }, t('retry'))] : []
+            view.replaceChildren()
+            foot.textContent = ''
+            showMessage(failure.text, 'error', actions)
+            setBusy(false)
+            return
+          }
+          if (!data) return
+          showMessage(data.stays.length ? '' : t('empty'))
+          if (!data.stays.length) {
+            view.replaceChildren()
+            foot.textContent = ''
+          } else if (data.view === 'details') renderDetails()
+          else if (data.view === 'compare') renderCompare()
+          else renderSearch()
+          setBusy(false)
+        }
+
+        const applyHostContext = (context) => {
+          if (!context || typeof context !== 'object') return
+          const previous = mode()
+          const relayout = layoutKeys.some(key => key in context && JSON.stringify(context[key]) !== JSON.stringify(hostContext[key]))
+          hostContext = { ...hostContext, ...context }
+          if (context.theme === 'dark' || context.theme === 'light') document.documentElement.style.colorScheme = context.theme
+          for (const [key, value] of Object.entries(context.styles?.variables || {})) {
+            if (/^--(?:color|font|border-radius|border-width|shadow)-/.test(key) && typeof value === 'string') document.documentElement.style.setProperty(key, value)
+          }
+          const insets = mode() === 'fullscreen' ? hostContext.safeAreaInsets || {} : {}
+          for (const side of ['top', 'right', 'bottom', 'left']) {
+            const value = insets[side]
+            if (Number.isFinite(value)) document.body.style.setProperty(`padding-${side}`, `${Math.max(16, Math.min(80, value + 12))}px`)
+            else document.body.style.removeProperty(`padding-${side}`)
+          }
+          if (!initialized || !relayout) return
+          if (previous !== mode() && mode() === 'inline' && base) {
+            operation++
+            activeRead = null
+            failure = null
+            selecting = false
+            data = base
+          }
+          render()
+        }
+        const receiveMessage = (event) => {
+          if (event.source !== window.parent || event.data?.jsonrpc !== '2.0') return
+          if (hostOrigin !== '*' && event.origin !== hostOrigin) return
+          const payload = event.data
+          const call = pending.get(payload.id)
+          if (call && !payload.method) {
+            pending.delete(payload.id)
+            window.clearTimeout(call.timeout)
+            if (event.origin !== 'null') hostOrigin = event.origin
+            if (payload.error) call.reject(new Error(payload.error.message || t('error')))
+            else call.resolve(payload.result)
+            return
+          }
+          if (!initialized) return
+          if (payload.method === 'ui/notifications/tool-input') {
+            if (!data && !failure) {
+              showMessage(t('searching'))
+              view.replaceChildren(skeleton('search'))
+            }
+          }
+          if (payload.method === 'ui/notifications/tool-result') {
+            const result = payload.params
+            const shown = result?.structuredContent
+            const lateEcho = !activeRead && lastRead && !result?.isError && shown?.view === lastRead.view && slugList(shown) === lastRead.slugs
+            if (lateEcho) return
+            const moveFocus = Boolean(activeRead) && document.hasFocus()
+            const read = activeRead && (result?.isError || shown?.view === readViews[activeRead.name]) ? activeRead : null
+            activeRead = null
+            operation++
+            receive(result, read)
+            if (moveFocus && !result?.isError && data) focusTitle()
+          }
+          if (payload.method === 'ui/notifications/tool-cancelled') {
+            activeRead = null
+            operation++
+            fail(t('cancelled'))
+          }
+          if (payload.method === 'ui/notifications/host-context-changed') applyHostContext(payload.params)
+          if (payload.method === 'ping' || payload.method === 'ui/resource-teardown') {
+            window.parent.postMessage({ jsonrpc: '2.0', id: payload.id, result: {} }, hostOrigin)
+          }
+          if (payload.method === 'ui/resource-teardown') {
+            disposed = true
+            activeRead = null
+            operation++
+            window.removeEventListener('message', receiveMessage)
+            observer.disconnect()
+            if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
+            pending.forEach((pendingCall) => {
+              window.clearTimeout(pendingCall.timeout)
+              pendingCall.reject(new Error(t('cancelled')))
+            })
+            pending.clear()
+          }
+        }
+
+        window.addEventListener('message', receiveMessage)
+        showMessage(t('loading'))
+        view.replaceChildren(skeleton('search'))
+        const reportSize = () => {
+          resizeFrame = null
+          if (!initialized || disposed) return
+          const height = Math.ceil(document.documentElement.getBoundingClientRect().height)
+          const width = document.documentElement.clientWidth
+          if (height === notifiedHeight && width === notifiedWidth) return
+          notifiedHeight = height
+          notifiedWidth = width
+          notify('ui/notifications/size-changed', { height, width })
+        }
+        const scheduleSize = () => {
+          if (resizeFrame !== null || disposed) return
+          resizeFrame = window.requestAnimationFrame(reportSize)
+        }
+        const observer = new ResizeObserver(scheduleSize)
+        observer.observe(document.body)
+        request('ui/initialize', {
+          protocolVersion,
+          appInfo: { name: 'Guestit stays', version: '2.0.0' },
+          appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] },
+        }).then((response) => {
+          if (response.protocolVersion !== protocolVersion) throw new Error(t('disconnected'))
+          hostCapabilities = response.hostCapabilities || {}
+          applyHostContext(response.hostContext)
+          initialized = true
+          notify('ui/notifications/initialized', {})
+          scheduleSize()
+        }).catch(() => {
+          if (!disposed) fail(t('disconnected'))
+        })
+      })()
+    </script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 4.0
+  Exclude:
+    - node_modules/**/*
+    - .gem_rbs_collection/**/*
+    - vendor/**/*
+    - spec/fixtures/**/*
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/ModuleFunction:
+  EnforcedStyle: extend_self
+
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+    - core-mcp.gemspec
+
+Metrics/MethodLength:
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+  Max: 20
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Max: 4
+
+Layout/LeadingCommentSpace:
+  AllowRBSInlineAnnotation: true
+
+Layout/LineLength:
+  Max: 180
+  AllowRBSInlineAnnotation: true
+  AllowedPatterns:
+    - '\A\s*# @rbs\b'
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: always
+
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+Metrics/ModuleLength:
+  CountAsOne:
+    - array
+    - hash
+
+Layout/LineEndStringConcatenationIndentation:
+  EnforcedStyle: indented
