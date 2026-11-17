@@ -76,6 +76,16 @@ not. The default reporter writes the exception to stderr.
 | `stay_details` | Read one stay's public details and an optional dated price |
 | `compare_stays` | Compare a bounded selection of public stays |
 
+Tool descriptions identify the Swedish accommodation catalog and require the
+traveler's dates and guest count before quoting a stay total. Search cards carry
+featured amenities; details and comparisons include all public amenities.
+
+Booking links preserve the locale, dates and guest count and add
+`utm_medium=mcp`. The source is `openai` only when the host supplies the trusted
+`ai_platform: 'openai'` context; otherwise it is `mcp`. Neither user-agent claims
+nor tool-call metadata determine attribution. Links never contain a user or
+session identifier.
+
 `CoreMcp::Server` builds a fresh SDK server and stateless Streamable HTTP transport for each request. It registers
 only the four catalog tools and the shared widget, and advertises the MCP Apps extension. No session or guest
 identity survives between requests. The SDK validates successful tool results against their declared output schemas.

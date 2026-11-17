@@ -3,7 +3,7 @@ class CoreMcp::Tools::ResolveDestination < CoreMcp::Tools::Base
 
   tool_name KIND
   title 'Find destinations'
-  description 'Find the Guestit destination for a place name before searching stays. Pass the place alone, such as Åre or Stockholm. ' \
+  description 'Find a supported Guestit destination in Sweden before searching apartments and holiday homes. Pass the city or area alone, such as Åre or Stockholm. ' \
     'Returns only places with Guestit stays, at most one. When nothing matches, ask the user about a larger place nearby.'
   input_schema CoreMcp::Tools::Schemas::DESTINATION_INPUT
 

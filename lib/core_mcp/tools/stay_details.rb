@@ -3,7 +3,8 @@ class CoreMcp::Tools::StayDetails < CoreMcp::Tools::Base
 
   tool_name KIND
   title 'Stay details'
-  description 'Read a public Guestit listing, house rules, cancellation policy and dated price estimate. Supply both dates and the guest count for an estimate. ' \
+  description 'Read a Guestit apartment or holiday home in Sweden, including all public amenities, house rules, cancellation policy and a dated price estimate. ' \
+    'Use this to check a home’s amenities and conditions before recommending it. Supply both dates and the guest count for an estimate. ' \
     'Fees shown are already included in the total. This does not reserve inventory or take payment. ' \
     'Open website_url to continue on Guestit; it opens with the dates and guests filled in.'
   input_schema CoreMcp::Tools::Schemas::DETAILS_INPUT

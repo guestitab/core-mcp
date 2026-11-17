@@ -18,6 +18,7 @@ RSpec.describe CoreMcp::Catalog::Stay do
       'occupancy' => { 'numGuests' => 4, 'numBedrooms' => 1, 'numBeds' => 2, 'petsAllowed' => false },
       'previewImages' => [{ 'url' => 'https://localhost/stay.jpg', 'altText' => 'Living room' }],
       'featuredAmenities' => [{ 'name' => 'WiFi' }],
+      'regularAmenities' => [{ 'name' => 'Kitchen' }, { 'name' => 'WiFi' }],
       'houseRules' => '<div>No smoking.<br>Quiet&nbsp;after 22.</div>',
       'price' => {
         'discount' => { 'totalPrice' => 375, 'price' => 100 },
@@ -37,7 +38,8 @@ RSpec.describe CoreMcp::Catalog::Stay do
       expect(details).to include(
         summary: "First room.\n\nSecond room.",
         house_rules: "No smoking.\nQuiet after 22.",
-        website_url: 'https://localhost/en/listings/stockholm-stay?adults=2&endDate=2027-02-15&startDate=2027-02-12',
+        amenities: %w[WiFi Kitchen],
+        website_url: 'https://localhost/en/listings/stockholm-stay?adults=2&endDate=2027-02-15&startDate=2027-02-12&utm_medium=mcp&utm_source=mcp',
         price: include(
           total_minor: 37_500,
           unit_price_minor: 10_000,
@@ -53,7 +55,7 @@ RSpec.describe CoreMcp::Catalog::Stay do
       let(:web_origin) { 'https://booking.example.test:3443' }
 
       it 'builds the handoff from the configured origin and canonical slug' do
-        expect(details.fetch(:website_url)).to eq('https://booking.example.test:3443/en/listings/stockholm-stay?adults=2&endDate=2027-02-15&startDate=2027-02-12')
+        expect(details.fetch(:website_url)).to eq('https://booking.example.test:3443/en/listings/stockholm-stay?adults=2&endDate=2027-02-15&startDate=2027-02-12&utm_medium=mcp&utm_source=mcp')
       end
     end
 
@@ -71,6 +73,12 @@ RSpec.describe CoreMcp::Catalog::Stay do
       it 'keeps the stay without an estimate' do
         expect(details).to include(status: 'found', price: include(status: 'unavailable', total_minor: nil))
       end
+    end
+  end
+
+  describe '#card' do
+    it 'keeps search cards limited to featured amenities' do
+      expect(described_class.new(data:, inputs:, web_origin:).card.fetch(:amenities)).to eq(['WiFi'])
     end
   end
 end

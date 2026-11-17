@@ -119,6 +119,7 @@ module CoreMcp
     INVALID_INPUT: ::String
     @schema: _Schema
     @web_origin: ::String
+    @attribution_source: ::String
     @context: ::Hash[::Symbol, untyped]
     def initialize: (server_context: server_context) -> void
     def resolve_destination: (Inputs inputs) -> payload
@@ -159,7 +160,8 @@ module CoreMcp
       @data: ::Hash[::String, untyped]
       @inputs: Inputs
       @web_origin: ::String
-      def initialize: (data: ::Hash[::String, untyped], inputs: Inputs, web_origin: ::String) -> void
+      @attribution_source: ::String
+      def initialize: (data: ::Hash[::String, untyped], inputs: Inputs, web_origin: ::String, ?attribution_source: ::String) -> void
       def card: () -> listing
       def details: () -> listing
       def unavailable?: () -> bool

@@ -3,7 +3,8 @@ class CoreMcp::Tools::SearchStays < CoreMcp::Tools::Base
 
   tool_name KIND
   title 'Search stays'
-  description 'Search public Guestit accommodation using a location_id from resolve_destination. Refine by resending the full filter set. ' \
+  description 'Search Guestit apartments and holiday homes in Sweden for a trip using a location_id from resolve_destination. ' \
+    'Use the traveler’s dates and guest count; ask for them before quoting a stay total. Refine by resending the full filter set. ' \
     'Each stay is a short card; read house rules and the cancellation policy with stay_details or compare_stays before recommending one. ' \
     'Prices are estimates for the supplied dates and guests, with no inventory hold. ' \
     'Stays that fail the live check for those dates are left out, so a page can hold fewer than its limit. ' \
