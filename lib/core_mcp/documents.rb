@@ -43,6 +43,7 @@ module CoreMcp::Documents
       showListing(slug: $slug) {
         ...McpStayCard
         previewImages(limit: 4) { url altText(locale: $locale) }
+        regularAmenities { name(locale: $locale) }
         cancellationPolicy(locale: $locale) houseRules(locale: $locale)
       }
     }

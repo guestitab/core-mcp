@@ -79,4 +79,51 @@ RSpec.describe CoreMcp::Catalog do
       expect(other_schema).not_to have_received(:multiplex)
     end
   end
+
+  describe 'booking attribution' do
+    let(:arguments) { { listing_slug: 'public-stay', num_guests: 3, start_date: '2027-02-12', end_date: '2027-02-15', locale: } }
+    let(:locale) { 'en' }
+    let(:platform) { nil }
+    let(:server_context) do
+      super().merge(ai_platform: platform, user_agent: 'ChatGPT-User', _meta: { 'openai/subject': 'private-user-id' })
+    end
+    let(:listing) do
+      {
+        'slug' => 'public-stay', 'name' => 'Public stay', 'numReviews' => 0,
+        'occupancy' => { 'numGuests' => 4, 'numBedrooms' => 2, 'numBeds' => 3 },
+        'previewImages' => [], 'featuredAmenities' => [], 'regularAmenities' => []
+      }
+    end
+    let(:website) { URI.parse(catalog.stay_details(inputs).fetch(:stays).first.fetch(:website_url)) }
+    let(:params) { URI.decode_www_form(website.query).to_h }
+
+    before { allow(schema).to receive(:multiplex).and_return([{ 'data' => { 'showListing' => listing } }]) }
+
+    it 'preserves the booking details without trusting client platform claims or exposing identity' do
+      expect(website.path).to eq('/en/listings/public-stay')
+      expect(params).to eq(
+        'adults' => '3', 'endDate' => '2027-02-15', 'startDate' => '2027-02-12', 'utm_source' => 'mcp', 'utm_medium' => 'mcp'
+      )
+    end
+
+    context 'with an OpenAI platform verified by the host' do
+      let(:platform) { 'openai' }
+
+      it 'identifies the OpenAI handoff without a user identifier' do
+        expect(params).to eq(
+          'adults' => '3', 'endDate' => '2027-02-15', 'startDate' => '2027-02-12', 'utm_source' => 'openai', 'utm_medium' => 'mcp'
+        )
+      end
+    end
+
+    context 'with another platform verified by the host' do
+      let(:platform) { 'other' }
+      let(:locale) { 'sv' }
+
+      it 'keeps the default locale path and generic MCP attribution' do
+        expect(website.path).to eq('/listings/public-stay')
+        expect(params).to include('utm_source' => 'mcp', 'utm_medium' => 'mcp')
+      end
+    end
+  end
 end

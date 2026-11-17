@@ -3,7 +3,8 @@ class CoreMcp::Tools::CompareStays < CoreMcp::Tools::Base
 
   tool_name KIND
   title 'Compare stays'
-  description 'Compare two to four distinct Guestit listings for the same dates and number of guests. ' \
+  description 'Compare two to four distinct Guestit apartments or holiday homes in Sweden for the same dates and guest count. ' \
+    'Includes all public amenities, house rules and cancellation policies. ' \
     'Retains missing or unavailable listings. Prices include applicable fees and do not hold inventory or confirm a booking.'
   input_schema CoreMcp::Tools::Schemas::COMPARE_INPUT
   meta ::MCP::Apps.tool_meta(resource_uri: CoreMcp::Widget::URI)

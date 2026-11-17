@@ -1,11 +1,12 @@
 class CoreMcp::Catalog::Stay
   WEBSITE_DEFAULT_LOCALE = 'sv'.freeze #: ::String
 
-  # @rbs (data: ::Hash[::String, untyped], inputs: CoreMcp::Inputs, web_origin: ::String) -> void
-  def initialize(data:, inputs:, web_origin:)
+  # @rbs (data: ::Hash[::String, untyped], inputs: CoreMcp::Inputs, web_origin: ::String, ?attribution_source: ::String) -> void
+  def initialize(data:, inputs:, web_origin:, attribution_source: 'mcp')
     @data = data
     @inputs = inputs
     @web_origin = web_origin
+    @attribution_source = attribution_source
   end
 
   # @rbs () -> CoreMcp::listing
@@ -29,6 +30,7 @@ class CoreMcp::Catalog::Stay
   def details
     {
       **card,
+      amenities: (@data.fetch('featuredAmenities') + @data.fetch('regularAmenities')).map { |amenity| amenity.fetch('name') }.uniq,
       cancellation_policy: text('cancellationPolicy'),
       house_rules: text('houseRules')
     } #: CoreMcp::listing
@@ -78,7 +80,9 @@ class CoreMcp::Catalog::Stay
     {
       startDate: @inputs.arguments[:start_date],
       endDate: @inputs.arguments[:end_date],
-      adults: @inputs.arguments.fetch(:num_guests)
+      adults: @inputs.arguments.fetch(:num_guests),
+      utm_source: @attribution_source,
+      utm_medium: 'mcp'
     }.compact
   end
 
