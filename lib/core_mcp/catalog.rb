@@ -11,6 +11,7 @@ class CoreMcp::Catalog
 
     @schema = configuration.schema
     @web_origin = configuration.web_origin
+    @attribution_source = server_context[:ai_platform] == 'openai' ? 'openai' : 'mcp'
     @context = {
       current_guest_token: nil,
       current_guest_profile_id: nil,
@@ -33,7 +34,7 @@ class CoreMcp::Catalog
     validate_destination!(inputs)
 
     result = execute(CoreMcp::Documents::SEARCH, inputs.search_variables).fetch('availableListings')
-    listings = result.fetch('collection').map { |listing| Stay.new(data: listing, inputs:, web_origin: @web_origin) }
+    listings = result.fetch('collection').map { |listing| Stay.new(data: listing, inputs:, web_origin: @web_origin, attribution_source: @attribution_source) }
     stays = listings.reject(&:unavailable?).map(&:card)
 
     attributes = { stays:, requested_stay: inputs.stay, pagination: pagination(result.fetch('metadata')), applied_filters: inputs.arguments }
@@ -45,9 +46,7 @@ class CoreMcp::Catalog
   def stay_details(inputs)
     stays = public_stays([inputs.arguments.fetch(:listing_slug)], inputs)
 
-    attributes = { stays:, requested_stay: inputs.stay }
-
-    response('details', inputs, attributes)
+    response('details', inputs, { stays:, requested_stay: inputs.stay })
   end
 
   # @rbs (CoreMcp::Inputs inputs) -> CoreMcp::payload
@@ -122,7 +121,7 @@ class CoreMcp::Catalog
     slugs.zip(results).map do |slug, result|
       data = public_listing(result.to_h, inputs.locale)
 
-      data ? Stay.new(data:, inputs:, web_origin: @web_origin).details : Stay.missing(slug)
+      data ? Stay.new(data:, inputs:, web_origin: @web_origin, attribution_source: @attribution_source).details : Stay.missing(slug)
     end
   end
 
