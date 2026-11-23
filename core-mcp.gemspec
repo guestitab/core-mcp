@@ -25,7 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'mcp', '~> 1.7.0'
   spec.add_dependency 'nokogiri', '~> 1.19'
   spec.add_dependency 'rack', '~> 3.2'
-  # json_schemer 2.5 calls the syntax API made private in regexp_parser 2.13.2.
-  spec.add_dependency 'regexp_parser', '>= 2.0', '< 2.13.2'
   spec.add_dependency 'uri', '~> 1.1'
 end

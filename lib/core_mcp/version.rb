@@ -1,3 +1,3 @@
 module CoreMcp
-  VERSION = '0.2.2'.freeze #: ::String
+  VERSION = '0.2.3'.freeze #: ::String
 end
